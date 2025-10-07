@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaCheckCircle } from 'react-icons/fa';
+import GroupChat from "./GroupChat";
 
 const VideoCourse = () => {
   const courseId = window.location.pathname.split("/")[2];
@@ -15,13 +15,10 @@ const VideoCourse = () => {
       const response = await axios.get(`${backendUrl}/api/course/${courseId}`);
 
       if (response.status === 200) {
-        console.log("Fetched course:", response.data);
-
         setThumbnail(response.data.thumbnail || "");
         const lessons = response.data.lessons || [];
         setVideos(lessons);
 
-        // Play first video by default
         if (lessons.length > 0) {
           setCurrentVideo(lessons[0]);
         }
@@ -35,7 +32,6 @@ const VideoCourse = () => {
     getVideo();
   }, []);
 
-  // Convert YouTube links to embed
   const getYouTubeEmbedUrl = (url) => {
     try {
       const urlObj = new URL(url);
@@ -46,20 +42,19 @@ const VideoCourse = () => {
         const videoId = urlObj.pathname.slice(1);
         return `https://www.youtube.com/embed/${videoId}`;
       }
-      return null; // not YouTube
+      return null;
     } catch {
       return null;
     }
   };
 
-  // Decide whether to render iframe or video
   const renderVideo = (video) => {
     const ytUrl = getYouTubeEmbedUrl(video.videoUrl);
     if (ytUrl) {
       return (
         <iframe
           width="100%"
-          height="400"
+          height="500"
           src={ytUrl}
           title={video.title}
           frameBorder="0"
@@ -71,29 +66,26 @@ const VideoCourse = () => {
     }
 
     return (
-      <> 
       <video
         src={video.videoUrl}
         controls
         autoPlay
-        className="w-full max-h-96 rounded-lg shadow-lg object-contain"
+        className="w-full rounded-lg shadow-lg h-64 "
       />
-<FaCheckCircle className="bg-yellow-200"/>
-      </>
     );
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
-      {/* Main Video Section */}
+    <div className="flex min-h-screen bg-gray-100 ">
+      {/* Main Content Area */}
       <div className="flex-1 p-6">
+        {/* Video Player */}
         {currentVideo ? (
-          <div>
-            <h2 className="text-xl font-bold mb-4">{currentVideo.title}</h2>
+          <div className="bg-white rounded-lg shadow-lg p-4 mb-6">
+            <h2 className="text-2xl font-bold mb-4">{currentVideo.title}</h2>
             {renderVideo(currentVideo)}
-
             <p
-              className="mt-3 text-gray-700"
+              className="mt-4 text-gray-700"
               dangerouslySetInnerHTML={{ __html: currentVideo.description }}
             />
           </div>
@@ -106,28 +98,39 @@ const VideoCourse = () => {
         ) : (
           <p>Loading...</p>
         )}
+
+        {/* Group Chat Below Video */}
+        <div className="bg-white rounded-lg shadow-lg p-4">
+          <h3 className="text-xl font-bold mb-4">Live Discussion</h3>
+          <GroupChat courseId={courseId} />
+        </div>
       </div>
 
       {/* Playlist Sidebar */}
-      <div className="w-full md:w-1/3 bg-white shadow-lg p-4 border-l border-gray-200">
-        <h2 className="text-lg font-semibold mb-4">Course Playlist</h2>
+      <div className="w-96 bg-white shadow-lg p-4 overflow-y-auto">
+        <h2 className="text-lg font-semibold mb-4 sticky top-0 bg-white pb-2">
+          Course Playlist
+        </h2>
         <ul className="space-y-2">
           {videos.length > 0 ? (
             videos.map((video, index) => (
               <li
                 key={video._id || index}
-                className={`cursor-pointer p-2 rounded-lg ${
+                className={`cursor-pointer p-3 rounded-lg transition-colors ${
                   currentVideo && currentVideo._id === video._id
-                    ? "bg-blue-100 font-semibold"
+                    ? "bg-blue-500 text-white font-semibold"
                     : "hover:bg-gray-100"
                 }`}
                 onClick={() => setCurrentVideo(video)}
               >
-                {index + 1}. {video.title}
+                <div className="flex items-start">
+                  <span className="font-bold mr-2">{index + 1}.</span>
+                  <span className="flex-1">{video.title}</span>
+                </div>
               </li>
             ))
           ) : (
-            <li>No lessons available</li>
+            <li className="text-gray-500">No lessons available</li>
           )}
         </ul>
       </div>

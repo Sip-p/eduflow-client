@@ -16,6 +16,9 @@ const Navbar = () => {
 }      <button className='hover:border-b-2 border-white' onClick={()=>navigate('/about')}>About</button>
       <button className='hover:border-b-2 border-white' onClick={()=>navigate('/pricing')}>Pricing</button>
       <button className='border-white border-2 px-2 py-1 text-white rounded-2xl hover:bg-white hover:text-black hover:border-blue-500 hover:border-3' onClick={()=>navigate('/home')}>{user ? "Logout":"Login/Register"}</button>
+      <button className='hover:border-b-2 border-white pr-3' onClick={()=>navigate('/review')}>Add reviews</button>
+
+      
 </div>
     </div>
   )

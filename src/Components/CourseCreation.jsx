@@ -22,18 +22,8 @@ const CourseCreation = () => {
   const [currVideoPreview, setCurrVideoPreview] = useState(null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
 
-  const backendUrl = "http://localhost:3000";
+const backendUrl=import.meta.env.VITE_BACKEND_URL
 
-  
-  // const handleThumbnailUpload = async (file) => {
-  //   if (!file) return "";
-    
-  //   setUploadingThumbnail(true);
-  //   try {
-  //     const formData = new FormData();
-  //     formData.append('file', file);
-      
- 
 
 const handleThumbnailUpload = async (file) => {
   if (!file) return "";

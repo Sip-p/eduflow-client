@@ -15,6 +15,8 @@ import About from './pages/About.jsx'
 import Pricing from './pages/Pricing.jsx'
 import ProtectedRoute  from './Components/ProtectedRoute.js'
 import Payment from './Components/Payment.jsx'
+import Review from './Components/Review.jsx'
+ 
 function App() {
   const [count, setCount] = useState(0)
 
@@ -58,6 +60,7 @@ function App() {
           }/>
            <Route path='/about' element={<About />} />
           <Route path='/pricing' element={<Pricing />} />
+          <Route path='/review' element={<Review/>}/>
         </Routes>
       </BrowserRouter>
     </>

@@ -57,7 +57,7 @@ const StudentDashBoard = () => {
         {/* Main Content Area */}
         <div className='flex-1 flex flex-col bg-gray-100 overflow-hidden'>
           {/* Top Bar */}
-          <div className='flex justify-between p-4 bg-white shadow-sm'>
+          {/* <div className='flex justify-between p-4 bg-white shadow-sm'>
             <input
               className='bg-gray-100 h-10 rounded-lg w-3/4 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
               placeholder='🔍 Search courses...'
@@ -65,7 +65,7 @@ const StudentDashBoard = () => {
             <button className='h-10 bg-green-600 hover:bg-green-700 px-6 ml-4 rounded-lg text-white font-medium transition-colors'>
               Notifications
             </button>
-          </div>
+          </div> */}
 
           {/* Main Content with Scroll */}
           <div className='flex-1 overflow-y-auto p-4'>

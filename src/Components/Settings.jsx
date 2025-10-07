@@ -1,35 +1,76 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Settings = () => {
-  // Example state (replace with actual user data from context or props)
-  const [name, setName] = useState("John Doe")
-  const [email, setEmail] = useState("john@example.com")
-  const [password, setPassword] = useState("")
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
+  const navigate = useNavigate();
+
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [password, setPassword] = useState("");
   const [notifications, setNotifications] = useState({
     email: true,
     sms: false,
     push: true,
-  })
-  const [language, setLanguage] = useState("English")
-  const [region, setRegion] = useState("India")
-  const [twoFactor, setTwoFactor] = useState(false)
+  });
+  const [language, setLanguage] = useState("English");
+  const [region, setRegion] = useState("India");
+  const [twoFactor, setTwoFactor] = useState(false);
 
-  const handleSave = (e) => {
-    e.preventDefault()
-    // TODO: Send updated settings to backend
-    alert("Settings saved!")
+  // ✅ Password change (called manually on Save)
+  const handlePasswordChange = async () => {
+    if (!password) return alert("Enter a new password first");
+    try {
+   const response = await axios.post(
+  `${backendUrl}/api/auth/reset-setting-password`,
+  { password },
+  {
+    headers: {
+      Authorization: `Bearer ${token}`, // ✅ correct
+      "Content-Type": "application/json",
+    },
   }
+);
 
-  const handleDeleteAccount = () => {
-    // TODO: Connect to backend for account deletion
-    if(window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-      alert("Account deleted!")
+      alert(response.data.message || "Password reset successful!");
+      setPassword("");
+    } catch (error) {
+      console.error(error);
+      alert("Error changing password");
     }
-  }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    // Call password change here (you could also update name/email similarly)
+   
+    alert("Settings saved!");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      try {
+        const response = await axios.delete(`${backendUrl}/api/delete`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.status === 200) {
+          alert("Account deleted");
+          localStorage.clear();
+          navigate("/");
+        }
+      } catch {
+        alert("Error deleting account");
+      }
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-xl p-8 my-10">
       <h1 className="text-3xl font-bold text-blue-700 mb-6 text-center">Settings</h1>
+
       <form onSubmit={handleSave} className="space-y-8">
         {/* Account Settings */}
         <div>
@@ -39,18 +80,19 @@ const Settings = () => {
               type="text"
               className="border p-2 rounded"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Name"
             />
             <input
               type="email"
               className="border p-2 rounded"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
             />
           </div>
         </div>
+
         {/* Password */}
         <div>
           <h2 className="text-xl font-semibold text-blue-700 mb-2">Change Password</h2>
@@ -58,72 +100,16 @@ const Settings = () => {
             type="password"
             className="border p-2 rounded w-full"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="New Password"
           />
+          <button className='bg-blue-600 rounded-lg p-3 mt-5' onClick={()=>{handlePasswordChange()}}>Submit</button>
         </div>
-        {/* Notifications */}
-        <div>
-          <h2 className="text-xl font-semibold text-blue-700 mb-2">Notification Settings</h2>
-          <div className="flex gap-6">
-            <label>
-              <input
-                type="checkbox"
-                checked={notifications.email}
-                onChange={e => setNotifications(n => ({ ...n, email: e.target.checked }))}
-              /> Email
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={notifications.sms}
-                onChange={e => setNotifications(n => ({ ...n, sms: e.target.checked }))}
-              /> SMS
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={notifications.push}
-                onChange={e => setNotifications(n => ({ ...n, push: e.target.checked }))}
-              /> Push
-            </label>
-          </div>
-        </div>
-        {/* Language and Region */}
-        <div>
-          <h2 className="text-xl font-semibold text-blue-700 mb-2">Language & Region</h2>
-          <div className="flex gap-4">
-            <select
-              className="border p-2 rounded"
-              value={language}
-              onChange={e => setLanguage(e.target.value)}
-            >
-              <option>English</option>
-              <option>Hindi</option>
-              <option>Spanish</option>
-            </select>
-            <select
-              className="border p-2 rounded"
-              value={region}
-              onChange={e => setRegion(e.target.value)}
-            >
-              <option>India</option>
-              <option>USA</option>
-              <option>Europe</option>
-            </select>
-          </div>
-        </div>
-        {/* Security */}
-        <div>
-          <h2 className="text-xl font-semibold text-blue-700 mb-2">Security Settings</h2>
-          <label>
-            <input
-              type="checkbox"
-              checked={twoFactor}
-              onChange={e => setTwoFactor(e.target.checked)}
-            /> Enable Two-Factor Authentication
-          </label>
-        </div>
+
+        {/* Other Settings... */}
+        {/* Notification, Language, Security */}
+        {/* (Keep same as your current layout) */}
+
         {/* Delete Account */}
         <div className="border-t pt-6 mt-6">
           <h2 className="text-xl font-semibold text-red-600 mb-2">Delete Account</h2>
@@ -136,6 +122,7 @@ const Settings = () => {
             Delete Account
           </button>
         </div>
+
         {/* Save/Cancel */}
         <div className="flex gap-4 justify-end mt-6">
           <button
@@ -154,7 +141,7 @@ const Settings = () => {
         </div>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default Settings
+export default Settings;
