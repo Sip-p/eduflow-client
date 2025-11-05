@@ -239,7 +239,7 @@ const Courses = () => {
                   if (course.price === 0) {
                     window.location.href = `/course/${course._id}`;
                   } else {
-                    navigate('/pricing', { state: { course } });
+navigate(`/courses/${course._id}/pricing`, { state: { course } });
                   }
                 }}
               >

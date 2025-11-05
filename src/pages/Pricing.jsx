@@ -1,16 +1,26 @@
-import React from 'react';
-import { FaCheckCircle } from 'react-icons/fa';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React from "react";
+import { FaCheckCircle } from "react-icons/fa";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Pricing = () => {
-  const { state } = useLocation();
-  const course = state.course;
+  const location = useLocation();
+  const course = location?.state?.course; // ✅ Safe access to avoid crash
   const navigate = useNavigate();
 
-  const handlePayment = () => {
-    // Replace this with actual payment integration
-    alert(`Redirecting to payment for course: ${course.title}, ₹${course.price}`);
-    // Example: navigate('/payment', { state: { course } });
+  if (!course) {
+    return (
+      <div className="flex justify-center items-center h-screen text-red-600 text-lg font-semibold">
+        ⚠️ No course details found. Please go back.
+      </div>
+    );
+  }
+
+  const handleBuyNow = () => {
+    if (course.price === 0) {
+      navigate(`/course/${course._id}`);
+    } else {
+      navigate("/payment", { state: { course } }); // ✅ Correct navigation
+    }
   };
 
   return (
@@ -20,16 +30,18 @@ const Pricing = () => {
       </h1>
 
       <div className="flex flex-col md:flex-row justify-center items-center gap-10">
-        {/* Course Details */}
         <div className="bg-white border-2 border-green-400 rounded-xl shadow-lg w-full max-w-md p-8 flex flex-col items-center">
-          <h2 className="text-2xl font-bold text-green-700 mb-2">{course.title}</h2>
+          <h2 className="text-2xl font-bold text-green-700 mb-2">
+            {course.title}
+          </h2>
+
           <p
             className="text-gray-600 mb-6 text-center"
             dangerouslySetInnerHTML={{ __html: course.description }}
           ></p>
 
           <ul className="mb-6 space-y-2 text-left w-full">
-            {course.lessons.map((lesson, idx) => (
+            {course.lessons?.map((lesson, idx) => (
               <li key={idx} className="flex items-center gap-2">
                 <FaCheckCircle className="text-green-400" /> {lesson.title}
               </li>
@@ -41,20 +53,13 @@ const Pricing = () => {
           </div>
 
           <button
-onClick={() => {
-  if (course.price === 0) {
-    navigate(`/course/${course._id}`);
-  } else {
-    // navigate('/payment', { state: { course } });
-    console.log("course",course)
-    navigate('/payment', { state: { course } });
-    console.log("kkk")
-  }
-}}
+            onClick={handleBuyNow}
             className={`${
-              course.price === 0 ? "bg-green-500 hover:bg-green-600" : "bg-yellow-500 hover:bg-yellow-600"
+              course.price === 0
+                ? "bg-green-500 hover:bg-green-600"
+                : "bg-yellow-500 hover:bg-yellow-600"
             } text-white font-semibold px-6 py-2 rounded-lg transition`}
-         >
+          >
             {course.price === 0 ? "Start Learning" : "Buy Now"}
           </button>
         </div>

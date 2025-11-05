@@ -8,6 +8,9 @@ import CourseCreation from '../Components/CourseCreation'
 import DashboardInst from '../Components/DashboardInst'
 import InstructorCourses from '../Components/InstructorCourses'
 import Footer from '../Components/Footer'
+import AssignmentCreate from '../Components/AssignmentCreate'
+import QuizCreate from '../Components/QuizCreate'
+import AllQuizInst from '../Components/AllQuizInst'
 const InstructorDashBoard = () => {
     const [activePage,setActivePage]=useState("dashboard")
     const user=JSON.parse(localStorage.getItem("user"))
@@ -40,13 +43,19 @@ const InstructorDashBoard = () => {
             onClick={() => setActivePage("Create Courses")}>📽️Create Course</li>
           <li className={`mx-2 my-3 text-white hover:bg-blue-800 p-2 rounded cursor-pointer ${activePage === "Settings" ? "bg-blue-800" : ""}`}
             onClick={() => setActivePage("Settings")}>⚙️Settings</li>
+               <li className={`mx-2 my-3 text-white hover:bg-blue-800 p-2 rounded cursor-pointer ${activePage === "Assignment" ? "bg-blue-800" : ""}`}
+            onClick={() => setActivePage("Assignment")}>📝Assignment</li>
+               <li className={`mx-2 my-3 text-white hover:bg-blue-800 p-2 rounded cursor-pointer ${activePage === "Create Quizzes" ? "bg-blue-800" : ""}`}
+            onClick={() => setActivePage("Create Quizzes")}>🙋Create Quizzes</li>
+              <li className={`mx-2 my-3 text-white hover:bg-blue-800 p-2 rounded cursor-pointer ${activePage === "My Quizzes" ? "bg-blue-800" : ""}`}
+            onClick={() => setActivePage("My Quizzes")}>📰My Quizzes</li>
         </ul>
       </div>
 
       {/* Main Content Area */}
       <div className='w-2/4 bg-gray-100 flex flex-col'> 
         {/* Top Bar */}
-        <div className='flex justify-between p-4'>
+        {/* <div className='flex justify-between p-4'>
           <input className='bg-gray-600 h-10 rounded-md w-3/4 flex items-center px-3 text-white' placeholder='🔍Search'/>
           
           
@@ -54,7 +63,7 @@ const InstructorDashBoard = () => {
             Notification
           </div>
         </div>
-        
+         */}
         {/* Main Content */}
         <div className='flex-1 p-4 bg-white m-4 rounded-lg'>
 <h1 className='text-2xl font-bold '>Welcome, {user.name}</h1>
@@ -70,6 +79,12 @@ const InstructorDashBoard = () => {
         return   <CourseCreation/>;
       case "Settings":
         return  <Settings/>;
+      case "Assignment":
+        return  <AssignmentCreate/>;
+      case "Create Quizzes":
+        return  <QuizCreate/>;
+      case "My Quizzes":
+        return  <AllQuizInst/>;
       default:
         return <DashboardInst />;
     }

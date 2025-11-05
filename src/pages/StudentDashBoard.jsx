@@ -6,6 +6,7 @@ import Settings from '../Components/Settings'
 import Navbar from '../Components/Navbar'
 import Footer from '../Components/Footer'
 import Notification from '../Components/Notification'
+import MyQuizzes from '../Components/MyQuizzes'
 const StudentDashBoard = () => {
   const [activePage, setActivePage] = useState("dashboard")
   const user = JSON.parse(localStorage.getItem("user"))
@@ -51,6 +52,14 @@ const StudentDashBoard = () => {
             >
               ⚙️ Settings
             </li>
+             <li
+              className={`mx-2 my-3 text-white hover:bg-blue-800 p-2 rounded cursor-pointer transition-colors ${
+                activePage === "MyQuizzes" ? "bg-blue-800" : ""
+              }`}
+              onClick={() => setActivePage("MyQuizzes")}
+            >
+              📙 My Quizzes
+            </li>
           </ul>
         </div>
 
@@ -87,6 +96,8 @@ const StudentDashBoard = () => {
                     
                   case "Settings":
                     return <Settings />
+                  case "MyQuizzes":
+                    return <MyQuizzes />
                   default:
                     return <DashboardStu />
                 }

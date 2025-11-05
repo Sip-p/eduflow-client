@@ -16,7 +16,11 @@ import Pricing from './pages/Pricing.jsx'
 import ProtectedRoute  from './Components/ProtectedRoute.js'
 import Payment from './Components/Payment.jsx'
 import Review from './Components/Review.jsx'
- 
+import Quizzes from './pages/Quizzes.jsx'
+import AttemptQuiz from './pages/AttemptQuiz.jsx'
+import QuizResult from './pages/QuizResult.jsx'
+import Quizstats from './pages/Quizstats.jsx'
+import OpenAssignmentpdf from './pages/OpenAssignmentpdf.jsx'
 function App() {
   const [count, setCount] = useState(0)
 
@@ -44,7 +48,7 @@ function App() {
           <Route path='/student-courses' element={
             <ProtectedRoute>
               <StuCourses />
-
+              
             </ProtectedRoute>
           } />
           <Route path='/course/:id' element={
@@ -59,8 +63,13 @@ function App() {
 </ProtectedRoute>
           }/>
            <Route path='/about' element={<About />} />
-          <Route path='/pricing' element={<Pricing />} />
+           <Route path='/quiz' element={<Quizzes />} />
+<Route path="/courses/:id/pricing" element={<Pricing />} />
           <Route path='/review' element={<Review/>}/>
+          <Route path='/attemptquiz' element={<AttemptQuiz/>}/>
+<Route path="/quiz/result" element={<QuizResult />} />
+<Route path="/quizstats/:id" element={<Quizstats />} />
+<Route path="/assignment/byId" element={<OpenAssignmentpdf/>}/>
         </Routes>
       </BrowserRouter>
     </>

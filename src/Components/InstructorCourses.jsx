@@ -42,7 +42,9 @@ const InstructorCourses = () => {
               onClick={() => viewCourse(course._id)}
             >
               <h2 className='text-xl font-bold mb-2'>{course.title}</h2>
-              <p className='text-sm text-gray-800 mb-4'>basic to advance javascript</p>
+<p className="text-sm text-gray-800 mb-4">
+  {course.description.replace(/<[^>]+>/g, '')}
+</p>
               <div className='flex justify-between items-center mb-2'>
                 <span className='bg-blue-100 px-2 py-1 rounded text-xs'>{course.category}</span>
                 <span className='font-semibold text-blue-700'>₹{course.price}</span>
