@@ -26,41 +26,38 @@ const Home = () => {
 
   // If not logged in, show login or signup form
   return (
-    <div className='flex justify-center align-center bg-gray-300 '> 
-    <div className="     flex flex-col items-center justify-center min-h-screen">
-      <div className="p-5 w-full max-w-md mx-auto bg-white rounded-lg shadow-md">
-        <h1 className="text-xl font-semibold mb-4 text-center">
-          {showSignup ? 'Sign Up' : 'Login'}
-        </h1>
+  <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+  <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 sm:p-8">
 
-        {showSignup ? <Signup /> : <Login />}
+    {showSignup ? <Signup /> : <Login />}
 
-        <p className="text-center mt-5 text-sm">
-          {showSignup ? (
-            <>
-              Already have an account?{' '}
-              <button
-                onClick={() => setShowSignup(false)}
-                className="text-blue-600 hover:underline"
-              >
-                Login here
-              </button>
-            </>
-          ) : (
-            <>
-              Don't have an account?{' '}
-              <button
-                onClick={() => setShowSignup(true)}
-                className="text-blue-600 hover:underline"
-              >
-                Sign up here
-              </button>
-            </>
-          )}
-        </p>
-      </div>
-    </div>
-    </div>
+    <p className="text-center text-sm text-gray-600 mt-6">
+      {showSignup ? (
+        <>
+          Already have an account?{" "}
+          <button
+            onClick={() => setShowSignup(false)}
+            className="text-amber-600 font-medium hover:underline"
+          >
+            Login here
+          </button>
+        </>
+      ) : (
+        <>
+          Don't have an account?{" "}
+          <button
+            onClick={() => setShowSignup(true)}
+            className="text-amber-600 font-medium hover:underline"
+          >
+            Sign up here
+          </button>
+        </>
+      )}
+    </p>
+
+  </div>
+</div>
+
   );
 };
 

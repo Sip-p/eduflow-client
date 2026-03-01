@@ -1,87 +1,83 @@
-import React, { useState } from 'react';
-import { useAuth } from '../redux/useAuth';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios'
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
 const Login = () => {
-    const navigate=useNavigate()
-  const { login, isLoading, error } = useAuth();
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const navigate = useNavigate();
+  const backendUrl =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
- 
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
-const handleSendLink=async()=>{
-  const res=await axios.post(backendUrl+'/api/auth//request-reset',{email})
-  console.log("The response is",res)
-}
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setError("");
+
     if (!formData.email.trim()) {
-      alert('Please enter your email');
-      return;
-    }
-    
-    if (!formData.password) {
-      alert('Please enter your password');
+      setError("Please enter your email");
       return;
     }
 
-    const loginData = {
-      email: formData.email.trim().toLowerCase(),
-      password: formData.password
-    };
+    if (!formData.password) {
+      setError("Please enter your password");
+      return;
+    }
 
     try {
-      const result = await login(loginData);
-      
-      if (result.type === 'auth/loginUser/fulfilled') {
-        console.log('Login successful!**');
-localStorage.setItem('token',result.payload.token)
-localStorage.setItem('user',JSON.stringify(result.payload.user))
-        const token=result.payload.token
-        const role=result.payload.user.role
-        if(token && role==="student"){
-          window.location.href='/student-dashboard'
-        }else if(token && role==="teacher"){
-          window.location.href='/instructor-dashboard'
-        }
-// console.log(result.payload.token)
+      setLoading(true);
+
+      const res = await axios.post(`${backendUrl}/api/auth/user-login`, {
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+      });
+console.log("Login response:", res.data);
+      const { token, user } = res.data;
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      // Redirect based on role
+      if (user.role === "student") {
+        navigate("/student-dashboard");
+      } else if (user.role === "teacher") {
+        navigate("/instructor-dashboard");
       }
     } catch (err) {
-        console.log("error here")
-      console.error('Login error:', err);
+      setError(
+        err.response?.data?.message || "Invalid email or password"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h2 style={{ textAlign: 'center', marginBottom: '30px' }}>
+    <div className="w-full bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+      <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">
         Welcome Back
       </h2>
-      
-      <form onSubmit={handleSubmit}>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div style={{
-            backgroundColor: '#f8d7da',
-            color: '#721c24',
-            padding: '12px',
-            borderRadius: '4px',
-            marginBottom: '20px',
-            border: '1px solid #f5c6cb'
-          }}>
-            {typeof error === 'object' ? error.message || 'Login failed' : error}
+          <div className="bg-red-100 text-red-700 text-sm rounded-lg border border-red-200 p-3">
+            {error}
           </div>
         )}
 
+        {/* Email */}
         <input
           type="email"
           name="email"
@@ -89,17 +85,10 @@ localStorage.setItem('user',JSON.stringify(result.payload.user))
           value={formData.email}
           onChange={handleChange}
           required
-          style={{
-            width: '100%',
-            padding: '12px',
-            marginBottom: '15px',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '16px',
-            boxSizing: 'border-box'
-          }}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
 
+        {/* Password */}
         <input
           type="password"
           name="password"
@@ -107,33 +96,31 @@ localStorage.setItem('user',JSON.stringify(result.payload.user))
           value={formData.password}
           onChange={handleChange}
           required
-          style={{
-            width: '100%',
-            padding: '12px',
-          
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '16px',
-            boxSizing: 'border-box'
-          }}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
-<a className='mb-9  text-blue-400 mr-4 hover:text-blue-700 cursor-pointer' onClick={()=>navigate('/reset-request')}>Forgot Password?</a>
-        <button className='mt-5'
+
+        {/* Forgot Password */}
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => navigate("/reset-request")}
+            className="text-sm text-amber-600 hover:underline"
+          >
+            Forgot Password?
+          </button>
+        </div>
+
+        {/* Submit Button */}
+        <button
           type="submit"
-          disabled={isLoading}
-          style={{
-            width: '100%',
-            padding: '14px',
-            backgroundColor: isLoading ? '#ccc' : '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: isLoading ? 'not-allowed' : 'pointer'
-          }}
+          disabled={loading}
+          className={`w-full py-2 rounded-lg font-semibold transition duration-200 ${
+            loading
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-amber-600 hover:bg-amber-700 text-white"
+          }`}
         >
-          {isLoading ? 'Logging in...' : 'Login'}
+          {loading ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>

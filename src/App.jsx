@@ -41,9 +41,9 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path='/instructor-dashboard' element={
-            <ProtectedRoute>
+            // <ProtectedRoute>
               <InstructorDashBoard />
-            </ProtectedRoute>
+            // </ProtectedRoute>
           } />
           <Route path='/student-courses' element={
             <ProtectedRoute>
@@ -77,3 +77,102 @@ function App() {
 }
 
 export default App
+
+
+// import { BrowserRouter, Routes, Route } from "react-router-dom";
+// import "./App.css";
+
+// import SignUp from "./authPage/SignUp.jsx";
+// import Home from "./Home.jsx";
+// import ResetPassword from "./authPage/ResetPassword.jsx";
+// import ResetrequestPage from "./authPage/ResetrequestPage.jsx";
+// import LandingPage from "./pages/LandingPage.jsx";
+// import StudentDashBoard from "./pages/StudentDashBoard.jsx";
+// import InstructorDashBoard from "./pages/InstructorDashBoard.jsx";
+// import StuCourses from "./Components/StuCourses.jsx";
+// import VideoCourse from "./Components/VideoCourse.jsx";
+// import Courses from "./pages/Courses.jsx";
+// import About from "./pages/About.jsx";
+// import Pricing from "./pages/Pricing.jsx";
+// import Payment from "./Components/Payment.jsx";
+// import Review from "./Components/Review.jsx";
+// import Quizzes from "./pages/Quizzes.jsx";
+// import AttemptQuiz from "./pages/AttemptQuiz.jsx";
+// import QuizResult from "./pages/QuizResult.jsx";
+// import Quizstats from "./pages/Quizstats.jsx";
+// import OpenAssignmentpdf from "./pages/OpenAssignmentpdf.jsx";
+
+// import ProtectedRoute from "./Components/ProtectedRoute.js";
+
+// function App() {
+//   return (
+//     <BrowserRouter>
+//       <Routes>
+//         {/* Public Routes */}
+//         <Route path="/" element={<LandingPage />} />
+//         <Route path="/home" element={<Home />} />
+//         <Route path="/signUp" element={<SignUp />} />
+//         <Route path="/reset-password/:token" element={<ResetPassword />} />
+//         <Route path="/reset-request" element={<ResetrequestPage />} />
+//         <Route path="/about" element={<About />} />
+//         <Route path="/quiz" element={<Quizzes />} />
+//         <Route path="/review" element={<Review />} />
+//         <Route path="/attemptquiz" element={<AttemptQuiz />} />
+//         <Route path="/quiz/result" element={<QuizResult />} />
+//         <Route path="/quizstats/:id" element={<Quizstats />} />
+//         <Route path="/assignment/byId" element={<OpenAssignmentpdf />} />
+
+//         {/* Protected Routes */}
+//         <Route
+//           path="/student-dashboard"
+//           element={
+//             <ProtectedRoute>
+//               <StudentDashBoard />
+//             </ProtectedRoute>
+//           }
+//         />
+
+//         <Route
+//           path="/instructor-dashboard"
+//           element={
+//             <ProtectedRoute>
+//               <InstructorDashBoard />
+//             </ProtectedRoute>
+//           }
+//         />
+
+//         <Route
+//           path="/student-courses"
+//           element={
+//             <ProtectedRoute>
+//               <StuCourses />
+//             </ProtectedRoute>
+//           }
+//         />
+
+//         <Route
+//           path="/course/:id"
+//           element={
+//             <ProtectedRoute>
+//               <VideoCourse />
+//             </ProtectedRoute>
+//           }
+//         />
+
+//         <Route
+//           path="/courses"
+//           element={
+//             <ProtectedRoute>
+//               <Courses />
+//             </ProtectedRoute>
+//           }
+//         />
+
+//         <Route path="/courses/:id/pricing" element={<Pricing />} />
+//         <Route path="/payment" element={<Payment />} />
+//       </Routes>
+//     </BrowserRouter>
+//   );
+// }
+
+// export default App;

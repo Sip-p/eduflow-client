@@ -19,10 +19,10 @@ const InstructorDashBoard = () => {
 
  
 
-
+console.log("instructir")
     // {console.log(user)}
   return (
-    <div className='min-h-screen flex flex-col'>
+    <div className='min-h-screen flex flex-col  '>
     <div> 
        <Navbar/>
     <div className='  flex  '> 
@@ -36,6 +36,7 @@ const InstructorDashBoard = () => {
             onClick={() => setActivePage("dashboard")}
           >
             💨Dashboard
+            {console.log("dashboard")}
           </li>
           <li className={`mx-2 my-3 text-white hover:bg-blue-800 p-2 rounded cursor-pointer ${activePage === "My Courses" ? "bg-blue-800" : ""}`}
             onClick={() => setActivePage("My Courses")}>📚My Courses</li>
