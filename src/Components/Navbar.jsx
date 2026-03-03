@@ -1,235 +1,282 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/useAuthStore';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
+  const { user, logout } = useAuthStore();
   const role = user?.role;
   const [menuOpen, setMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: 'Home', path: '/', always: true },
+    { label: 'Home',      path: '/',                  always: true },
     { label: 'Dashboard', path: role === 'teacher' ? '/instructor-dashboard' : '/student-dashboard', roles: ['teacher', 'student'] },
-    { label: 'Courses', path: '/courses', roles: ['student'] },
-    { label: 'Quizzes', path: '/quiz', roles: ['student'] },
-    { label: 'About', path: '/about', always: true },
-    { label: 'Pricing', path: '/pricing', always: true },
-    { label: 'Reviews', path: '/review', always: true },
+    { label: 'Courses',   path: '/courses',            roles: ['student'] },
+    { label: 'Quizzes',   path: '/quiz',               roles: ['student'] },
+    { label: 'About',     path: '/about',              always: true },
+    { label: 'Pricing',   path: '/pricing',            always: true },
+    { label: 'Reviews',   path: '/review',             always: true },
   ].filter(link => link.always || (link.roles && link.roles.includes(role)));
+
+  const handleAuthClick = () => {
+    if (user) {
+      logout();
+      navigate('/home');
+    } else {
+      navigate('/home');
+    }
+  };
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-        .navbar-root {
-          font-family: 'DM Mono', monospace;
-          background: #0f0e0d;
-          border-bottom: 1px solid rgba(255,255,255,0.07);
+        .nb-root {
+          font-family: 'DM Sans', sans-serif;
+          background: #080810;
+          border-bottom: 1px solid #1e293b;
           position: sticky;
           top: 0;
           z-index: 100;
         }
-        .navbar-inner {
+        .nb-inner {
           max-width: 1280px;
           margin: 0 auto;
           padding: 0 1.5rem;
-          height: 60px;
+          height: 62px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 1rem;
         }
-        .navbar-brand {
+
+        /* Brand */
+        .nb-brand {
           display: flex;
           align-items: center;
-          gap: 0.6rem;
+          gap: 10px;
           cursor: pointer;
+          flex-shrink: 0;
           text-decoration: none;
+        }
+        .nb-brand-icon {
+          width: 32px; height: 32px;
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 16px;
           flex-shrink: 0;
         }
-        .brand-logo {
-          width: 32px;
-          height: 32px;
-          border-radius: 6px;
-          object-fit: cover;
-          filter: grayscale(20%);
-        }
-        .brand-name {
-          font-family: 'DM Serif Display', serif;
-          font-size: 1.15rem;
-          color: #f5f0e8;
+        .nb-brand-name {
+          font-family: 'Syne', sans-serif;
+          font-size: 1.1rem;
+          font-weight: 800;
+          color: #f1f5f9;
           letter-spacing: -0.01em;
           white-space: nowrap;
         }
-        .brand-name span {
-          color: #e8a44a;
+        .nb-brand-name span {
+          background: linear-gradient(135deg, #6366f1, #a78bfa);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
         }
-        .nav-links {
+
+        /* Links */
+        .nb-links {
           display: flex;
           align-items: center;
-          gap: 0.1rem;
+          gap: 2px;
           list-style: none;
-          margin: 0;
-          padding: 0;
+          margin: 0; padding: 0;
         }
-        .nav-link {
-          background: none;
-          border: none;
-          color: #9e9a94;
-          font-family: 'DM Mono', monospace;
-          font-size: 0.72rem;
+        .nb-link {
+          background: none; border: none;
+          color: #475569;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
           font-weight: 500;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          padding: 0.35rem 0.75rem;
-          border-radius: 4px;
+          letter-spacing: 0.01em;
+          padding: 6px 12px;
+          border-radius: 7px;
           cursor: pointer;
-          transition: color 0.15s ease, background 0.15s ease;
+          transition: color 0.15s, background 0.15s;
           white-space: nowrap;
         }
-        .nav-link:hover {
-          color: #f5f0e8;
-          background: rgba(255,255,255,0.06);
+        .nb-link:hover {
+          color: #f1f5f9;
+          background: rgba(255,255,255,0.05);
         }
-        .nav-link.active {
-          color: #e8a44a;
-        }
-        .nav-cta {
-          background: none;
-          border: 1px solid rgba(232, 164, 74, 0.5);
-          color: #e8a44a;
-          font-family: 'DM Mono', monospace;
-          font-size: 0.7rem;
-          font-weight: 500;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          padding: 0.4rem 1rem;
-          border-radius: 4px;
+
+        /* CTA */
+        .nb-cta {
+          padding: 7px 18px;
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          color: white;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          border: none;
+          border-radius: 8px;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: opacity 0.2s, transform 0.15s;
           white-space: nowrap;
           flex-shrink: 0;
         }
-        .nav-cta:hover {
-          background: #e8a44a;
-          color: #0f0e0d;
-          border-color: #e8a44a;
+        .nb-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        /* Avatar */
+        .nb-avatar {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-shrink: 0;
         }
-        .hamburger {
+        .nb-avatar-img {
+          width: 32px; height: 32px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid #1e293b;
+        }
+        .nb-avatar-name {
+          font-size: 13px;
+          font-weight: 500;
+          color: #94a3b8;
+        }
+        .nb-logout {
+          background: transparent;
+          border: 1px solid #1e293b;
+          color: #475569;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px;
+          font-weight: 500;
+          padding: 5px 12px;
+          border-radius: 7px;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+        .nb-logout:hover { border-color: #ef4444; color: #ef4444; }
+
+        /* Hamburger */
+        .nb-hamburger {
           display: none;
           flex-direction: column;
-          gap: 4px;
+          gap: 5px;
           background: none;
           border: none;
           cursor: pointer;
           padding: 4px;
         }
-        .hamburger span {
+        .nb-hamburger span {
           display: block;
-          width: 20px;
-          height: 2px;
-          background: #9e9a94;
+          width: 20px; height: 2px;
+          background: #475569;
+          border-radius: 2px;
           transition: all 0.2s;
         }
-        .mobile-menu {
+
+        /* Mobile menu */
+        .nb-mobile {
           display: none;
           flex-direction: column;
-          background: #0f0e0d;
-          border-top: 1px solid rgba(255,255,255,0.07);
-          padding: 0.75rem 1.5rem 1rem;
-          gap: 0.25rem;
+          background: #0d1117;
+          border-top: 1px solid #1e293b;
+          padding: 12px 20px 16px;
+          gap: 4px;
         }
-        .mobile-menu.open {
-          display: flex;
-        }
-        .mobile-link {
-          background: none;
-          border: none;
-          color: #9e9a94;
-          font-family: 'DM Mono', monospace;
-          font-size: 0.75rem;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          padding: 0.6rem 0.5rem;
+        .nb-mobile.open { display: flex; }
+        .nb-mobile-link {
+          background: none; border: none;
+          color: #475569;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          font-weight: 500;
+          padding: 10px 8px;
           text-align: left;
           cursor: pointer;
-          border-bottom: 1px solid rgba(255,255,255,0.04);
+          border-bottom: 1px solid #1e293b;
           transition: color 0.15s;
         }
-        .mobile-link:hover { color: #f5f0e8; }
-        .mobile-cta {
-          margin-top: 0.5rem;
-          background: none;
-          border: 1px solid rgba(232, 164, 74, 0.5);
-          color: #e8a44a;
-          font-family: 'DM Mono', monospace;
-          font-size: 0.72rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          padding: 0.55rem 1rem;
-          border-radius: 4px;
+        .nb-mobile-link:hover { color: #f1f5f9; }
+        .nb-mobile-cta {
+          margin-top: 8px;
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          color: white;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          padding: 10px;
+          border: none;
+          border-radius: 8px;
           cursor: pointer;
-          transition: all 0.2s;
           text-align: center;
         }
-        .mobile-cta:hover { background: #e8a44a; color: #0f0e0d; }
 
         @media (max-width: 768px) {
-          .nav-links { display: none; }
-          .nav-cta { display: none; }
-          .hamburger { display: flex; }
+          .nb-links { display: none; }
+          .nb-cta { display: none; }
+          .nb-avatar { display: none; }
+          .nb-logout { display: none; }
+          .nb-hamburger { display: flex; }
         }
       `}</style>
 
-      <nav className="navbar-root">
-        <div className="navbar-inner">
+      <nav className="nb-root">
+        <div className="nb-inner">
+
           {/* Brand */}
-          <div className="navbar-brand" onClick={() => navigate('/')}>
-            <img
-              src="https://img.freepik.com/free-vector/online-education-concept-illustration_114360-6261.jpg?w=740"
-              alt="Logo"
-              className="brand-logo"
-            />
-            <span className="brand-name">Edu<span>Platform</span></span>
+          <div className="nb-brand" onClick={() => navigate('/')}>
+            <div className="nb-brand-icon">🎓</div>
+            <span className="nb-brand-name">Edu<span>Flow</span></span>
           </div>
 
           {/* Desktop links */}
-          <ul className="nav-links">
+          <ul className="nb-links">
             {navLinks.map(link => (
               <li key={link.label}>
-                <button
-                  className="nav-link"
-                  onClick={() => navigate(link.path)}
-                >
+                <button className="nb-link" onClick={() => navigate(link.path)}>
                   {link.label}
                 </button>
               </li>
             ))}
           </ul>
 
-          {/* CTA */}
-          <button className="nav-cta" onClick={() => navigate('/home')}>
-            {user ? 'Logout' : 'Sign in'}
-          </button>
+          {/* Right side */}
+          {user ? (
+            <div className="nb-avatar">
+              <img
+                src={user.pic || "https://via.placeholder.com/32"}
+                alt={user.name}
+                className="nb-avatar-img"
+              />
+              <span className="nb-avatar-name">{user.name}</span>
+              <button className="nb-logout" onClick={handleAuthClick}>
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button className="nb-cta" onClick={handleAuthClick}>
+              Sign In
+            </button>
+          )}
 
           {/* Hamburger */}
-          <button className="hamburger" onClick={() => setMenuOpen(o => !o)} aria-label="Toggle menu">
-            <span />
-            <span />
-            <span />
+          <button className="nb-hamburger" onClick={() => setMenuOpen(o => !o)}>
+            <span /><span /><span />
           </button>
         </div>
 
         {/* Mobile menu */}
-        <div className={`mobile-menu ${menuOpen ? 'open' : ''}`}>
+        <div className={`nb-mobile ${menuOpen ? 'open' : ''}`}>
           {navLinks.map(link => (
-            <button key={link.label} className="mobile-link" onClick={() => { navigate(link.path); setMenuOpen(false); }}>
+            <button key={link.label} className="nb-mobile-link"
+              onClick={() => { navigate(link.path); setMenuOpen(false); }}>
               {link.label}
             </button>
           ))}
-          <button className="mobile-cta" onClick={() => { navigate('/home'); setMenuOpen(false); }}>
-            {user ? 'Logout' : 'Sign in'}
+          <button className="nb-mobile-cta"
+            onClick={() => { handleAuthClick(); setMenuOpen(false); }}>
+            {user ? 'Logout' : 'Sign In'}
           </button>
         </div>
       </nav>

@@ -1,63 +1,57 @@
-import React, { useState } from 'react';
-import { useAuth } from './redux/useAuth';
-import Login from './authPage/Login';
-import Signup from './authPage/SignUp';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "./store/useAuthStore";  // ✅ Zustand
+import Login from "./authPage/Login";
+import Signup from "./authPage/SignUp";
 
 const Home = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { user, isAuthenticated } = useAuthStore();  // ✅ replaces useAuth()
+  const navigate = useNavigate();
   const [showSignup, setShowSignup] = useState(false);
 
-  // If user is logged in, show dashboard
-  // if (isAuthenticated) {
-  //   return (
-  //     <div className="p-5">
-  //       <h1 className="text-2xl font-bold mb-2">Welcome to Dashboard!</h1>
-  //       <p className="mb-1">Hello, {user?.name || user?.email || 'User'}!</p>
-  //       <p className="mb-4">You are successfully logged in.</p>
-  //       <button
-  //         onClick={logout}
-  //         className="px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
-  //       >
-  //         Logout
-  //       </button>
-  //     </div>
-  //   );
-  // }
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === "student") navigate("/student-dashboard");
+      else if (user.role === "teacher") navigate("/instructor-dashboard");
+    }
+  }, [isAuthenticated, user, navigate]);
 
-  // If not logged in, show login or signup form
+  if (isAuthenticated && user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 to-blue-900 text-white">
+        <h1 className="text-2xl font-semibold">Redirecting...</h1>
+      </div>
+    );
+  }
+
   return (
-  <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
-  <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-950 px-4">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 transition-all duration-300">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+          {showSignup ? "Create Account" : "Welcome Back"}
+        </h2>
 
-    {showSignup ? <Signup /> : <Login />}
+        {showSignup ? <Signup /> : <Login />}
 
-    <p className="text-center text-sm text-gray-600 mt-6">
-      {showSignup ? (
-        <>
-          Already have an account?{" "}
-          <button
-            onClick={() => setShowSignup(false)}
-            className="text-amber-600 font-medium hover:underline"
-          >
-            Login here
-          </button>
-        </>
-      ) : (
-        <>
-          Don't have an account?{" "}
-          <button
-            onClick={() => setShowSignup(true)}
-            className="text-amber-600 font-medium hover:underline"
-          >
-            Sign up here
-          </button>
-        </>
-      )}
-    </p>
-
-  </div>
-</div>
-
+        <p className="text-center text-sm text-gray-600 mt-6">
+          {showSignup ? (
+            <>
+              Already have an account?{" "}
+              <button onClick={() => setShowSignup(false)} className="text-indigo-600 font-medium hover:underline">
+                Login here
+              </button>
+            </>
+          ) : (
+            <>
+              Don't have an account?{" "}
+              <button onClick={() => setShowSignup(true)} className="text-indigo-600 font-medium hover:underline">
+                Sign up here
+              </button>
+            </>
+          )}
+        </p>
+      </div>
+    </div>
   );
 };
 

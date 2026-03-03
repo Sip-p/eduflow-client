@@ -11,14 +11,16 @@ import Footer from '../Components/Footer'
 import AssignmentCreate from '../Components/AssignmentCreate'
 import QuizCreate from '../Components/QuizCreate'
 import AllQuizInst from '../Components/AllQuizInst'
+import { useAuthStore } from '../store/useAuthStore'
+
 const InstructorDashBoard = () => {
     const [activePage,setActivePage]=useState("dashboard")
-    const user=JSON.parse(localStorage.getItem("user"))
- 
- 
+const { user } = useAuthStore() 
 
  
-
+if (!user) {
+  return <div className="p-10 text-center">Loading...</div>;
+}
 console.log("instructir")
     // {console.log(user)}
   return (

@@ -7,10 +7,11 @@ import Navbar from '../Components/Navbar'
 import Footer from '../Components/Footer'
 import Notification from '../Components/Notification'
 import MyQuizzes from '../Components/MyQuizzes'
+import { useAuthStore } from '../store/useAuthStore'
+
 const StudentDashBoard = () => {
   const [activePage, setActivePage] = useState("dashboard")
-  const user = JSON.parse(localStorage.getItem("user"))
-
+ const { user } = useAuthStore()
   return (
     <div className='flex flex-col min-h-screen'>
       <Navbar />
