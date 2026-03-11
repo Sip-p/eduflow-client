@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-
+import { useAuthStore } from "../store/useAuthStore";
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 const AssignmentCreate = () => {
@@ -17,7 +17,7 @@ const AssignmentCreate = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-  const token = localStorage.getItem("token");
+  const { token } = useAuthStore();
 
   // Fetch instructor's courses for the dropdown
   useEffect(() => {

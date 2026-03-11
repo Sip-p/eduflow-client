@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-
+import { useAuthStore } from '../store/useAuthStore'
 const DashboardStu = () => {
   const [allCourses, setAllCourses] = useState([])
   const [enrolledCourses, setEnrolledCourses] = useState([])
   const [loading, setLoading] = useState(true)
-  const token = localStorage.getItem("token")
-  const backendurl = import.meta.env.VITE_BACKEND_URL
+const { user, token, isAuthenticated } = useAuthStore();   const backendurl = import.meta.env.VITE_BACKEND_URL
   const navigate = useNavigate()
 
   const getAllCourses = async () => {
@@ -25,6 +24,7 @@ const DashboardStu = () => {
         headers: { Authorization: `Bearer ${token}` }
       })
       setEnrolledCourses(response.data.mycourses || [])
+      console.log("Enrolled courses fetched:", response.data.mycourses)
     } catch (error) {
       console.error("Error fetching enrolled courses:", error)
     }
@@ -42,14 +42,18 @@ const DashboardStu = () => {
     c => !enrolledCourses.some(ec => ec._id === c._id)
   )
 
-  const handleCourseClick = (course) => {
+  const handleCourseClick = async (course) => {
     if (course.price === 0) {
+       await axios.post(`${backendurl}/api/course/auto-enroll/${course._id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
       navigate(`/course/${course._id}`)
+
     } else {
       navigate('/pricing', { state: { course } })
     }
   }
-
+console.log("Enrolled Courses:", enrolledCourses)
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -87,7 +91,7 @@ const DashboardStu = () => {
       </div>
 
       {/* Continue Learning */}
-      {inProgressCourses.length > 0 && (
+      {/* {inProgressCourses.length > 0 && (
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Continue Learning</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -109,7 +113,7 @@ const DashboardStu = () => {
             ))}
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Explore Courses */}
       <div className="bg-white rounded-xl shadow-lg p-6">

@@ -25,11 +25,11 @@ ChartJS.register(
   Legend,
   Filler
 );
-
+import { useAuthStore } from '../store/useAuthStore';
 const MyQuizzes = () => {
   const user = JSON.parse(localStorage.getItem('user'));
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
-  const token = localStorage.getItem('token');
+  const { token } = useAuthStore();
 
   const [attemptedQuizzes, setAttemptedQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);

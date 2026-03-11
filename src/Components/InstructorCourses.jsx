@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
-
+import { useAuthStore } from '../store/useAuthStore'
 const backendUrl = import.meta.env.VITE_BACKEND_URL
 
 const InstructorCourses = () => {
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const token = localStorage.getItem("token")
-
+const { user, token, isAuthenticated } = useAuthStore();
   const getAllCourses = async () => {
     try {
       setLoading(true)

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
+import { courseService } from "../services/courseService";
 gsap.registerPlugin(ScrollTrigger);
 
 const Courses = () => {
@@ -38,11 +38,11 @@ const Courses = () => {
         }
       });
 
-      const response = await axios.get(`${backendUrl}/api/course?${queryParams}`);
-      if (response.data.success) {
-        setCourses(response.data.courses);
-        if (response.data.pagination) {
-          setPagination(response.data.pagination);
+const response = await courseService.getAll(filters);  
+    if (response.success) {
+        setCourses(response.courses);
+        if (response.pagination) {
+          setPagination(response.pagination);
         }
       }
     } catch (error) {

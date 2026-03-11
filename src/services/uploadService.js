@@ -1,25 +1,40 @@
-import api from "./api";
+import api from "../api/api";
 
 export const uploadService = {
-  uploadVideo: async (file, onProgress) => {
-    const form = new FormData();
-    form.append("video", file);
-    const res = await api.post("/upload/video", form, {
-      headers: { "Content-Type": "multipart/form-data" },
-      onUploadProgress: (e) => {
-        if (onProgress) {
-          const pct = Math.round((e.loaded * 100) / e.total);
-          onProgress(pct);
-        }
-      },
-    });
-    return res.data.url;
-  },
+  // uploadVideo: async (file, onProgress) => {
+  //   const form = new FormData();
+  //   form.append("video", file);
+  //   const res = await api.post("/upload/video", form, {
+  //     headers: { "Content-Type": "multipart/form-data" },
+  //     onUploadProgress: (e) => {
+  //       if (onProgress) {
+  //         const pct = Math.round((e.loaded * 100) / e.total);
+  //         onProgress(pct);
+  //       }
+  //     },
+  //   });
+  //   return res.data.url;
+  // },
+uploadVideo: async (file, onProgress) => {
+  const form = new FormData();
+  form.append("file", file);
 
+  const res = await api.post("/upload/upload-video", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+    onUploadProgress: (e) => {
+      if (onProgress) {
+        const pct = Math.round((e.loaded * 100) / e.total);
+        onProgress(pct);
+      }
+    },
+  });
+
+  return res.data;
+},
   uploadImage: async (file) => {
     const form = new FormData();
-    form.append("image", file);
-    const res = await api.post("/upload/image", form, {
+    form.append("file", file);
+    const res = await api.post("/upload/upload-image", form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data.url;

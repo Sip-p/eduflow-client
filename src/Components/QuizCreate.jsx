@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import axios from 'axios';
-
+import { useAuthStore } from '../store/useAuthStore';
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 const TOGGLE_OPTIONS = ["allowReview", "showCorrectAnswers", "shuffleQuestions", "shuffleOptions", "isPublished"];
@@ -43,8 +43,7 @@ const QuizCreate = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const [activeSection, setActiveSection] = useState("questions"); // questions | settings
-  const token = localStorage.getItem("token");
-
+const {   token  } = useAuthStore();
   useEffect(() => {
     const fetchCourses = async () => {
       try {

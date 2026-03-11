@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
+import { useAuthStore } from "../store/useAuthStore";
 import {
   BookOpen,
   Users,
@@ -28,8 +29,7 @@ const DashboardInst = () => {
   });
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
-  const token = localStorage.getItem("token");
-
+const { user, token, isAuthenticated } = useAuthStore();
   const getalldashboarddata = async () => {
     try {
       const res = await axios.get(

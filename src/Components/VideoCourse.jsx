@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import GroupChat from "./GroupChat";
-
+import { useAuthStore } from "../store/useAuthStore";
 const VideoCourse = () => {
-  const courseId = window.location.pathname.split("/")[2];
+  // ✅ FIX: useParams instead of window.location.pathname
+  const { id: courseId } = useParams();
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const navigate = useNavigate();
+
+  // ✅ FIX: read token from zustand-persisted store, not bare localStorage
+ const { user, token, isAuthenticated } = useAuthStore();
 
   const [course, setCourse] = useState(null);
   const [curriculum, setCurriculum] = useState([]);
@@ -15,7 +19,7 @@ const VideoCourse = () => {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedChapters, setExpandedChapters] = useState({});
-  const [activeTab, setActiveTab] = useState("playlist"); // playlist | assignments | chat
+  const [activeTab, setActiveTab] = useState("chat");
   const [completedLessons, setCompletedLessons] = useState(new Set());
 
   const getCurriculum = async () => {
@@ -43,7 +47,7 @@ const VideoCourse = () => {
   const getAssignments = async () => {
     try {
       const res = await axios.get(`${backendUrl}/api/assignments/courseassignments/${courseId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.status === 200) setAssignments(res.data.assignments);
     } catch (err) {
@@ -51,22 +55,17 @@ const VideoCourse = () => {
     }
   };
 
+  // ✅ FIX: courseId in dependency array so re-fetches if route changes
   useEffect(() => {
     getCurriculum();
     getAssignments();
-  }, []);
+  }, [courseId]);
 
   const toggleChapter = (id) =>
     setExpandedChapters((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const handleLessonClick = (lesson) => {
-    setCurrentVideo(lesson);
-    if (window.innerWidth < 1024) setActiveTab("playlist");
-  };
-
-  const markComplete = (lessonId) => {
+  const markComplete = (lessonId) =>
     setCompletedLessons((prev) => new Set([...prev, lessonId]));
-  };
 
   const getNextLesson = () => {
     let found = false;
@@ -93,13 +92,16 @@ const VideoCourse = () => {
   const getYouTubeEmbedUrl = (url) => {
     try {
       const u = new URL(url);
-      if (u.hostname.includes("youtube.com")) return `https://www.youtube.com/embed/${u.searchParams.get("v")}?autoplay=1&rel=0`;
-      if (u.hostname.includes("youtu.be")) return `https://www.youtube.com/embed/${u.pathname.slice(1)}?autoplay=1&rel=0`;
+      if (u.hostname.includes("youtube.com"))
+        return `https://www.youtube.com/embed/${u.searchParams.get("v")}?autoplay=1&rel=0`;
+      if (u.hostname.includes("youtu.be"))
+        return `https://www.youtube.com/embed/${u.pathname.slice(1)}?autoplay=1&rel=0`;
       return null;
     } catch { return null; }
   };
 
   const totalLessons = curriculum.reduce((s, c) => s + (c.lessons?.length || 0), 0);
+
   const currentLessonIndex = (() => {
     let idx = 0;
     for (const ch of curriculum) {
@@ -111,22 +113,25 @@ const VideoCourse = () => {
     return 0;
   })();
 
-  const progressPct = totalLessons > 0 ? Math.round((completedLessons.size / totalLessons) * 100) : 0;
+  const progressPct = totalLessons > 0
+    ? Math.round((completedLessons.size / totalLessons) * 100)
+    : 0;
 
-  if (loading) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#0a0a0f", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{
-            width: 48, height: 48, border: "3px solid #1e293b", borderTop: "3px solid #6366f1",
-            borderRadius: "50%", margin: "0 auto 16px", animation: "spin 0.8s linear infinite"
-          }} />
-          <p style={{ color: "#64748b", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.05em" }}>Loading course...</p>
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: "#0c0c10", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{
+          width: 40, height: 40, border: "2px solid #222",
+          borderTop: "2px solid #e8a87c", borderRadius: "50%",
+          margin: "0 auto 14px", animation: "spin 0.7s linear infinite"
+        }} />
+        <p style={{ fontFamily: "'Lora', serif", color: "#555", fontSize: 15, letterSpacing: "0.04em" }}>
+          Loading course…
+        </p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
-    );
-  }
+    </div>
+  );
 
   const ytUrl = currentVideo ? getYouTubeEmbedUrl(currentVideo.videoUrl) : null;
   const isDirectVideo = currentVideo && !ytUrl;
@@ -134,544 +139,687 @@ const VideoCourse = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap');
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .vc-root {
-          min-height: 100vh;
-          background: #080810;
-          color: #e2e8f0;
-          font-family: 'DM Sans', sans-serif;
-          display: flex;
-          flex-direction: column;
+        :root {
+          --bg:        #0c0c10;
+          --surface:   #111116;
+          --surface2:  #18181f;
+          --border:    #25252f;
+          --border2:   #2e2e3a;
+          --text:      #e4e0d8;
+          --text2:     #9490a0;
+          --muted:     #4a4858;
+          --amber:     #e8a87c;
+          --amber2:    #d4845a;
+          --green:     #6db88a;
+          --serif:     'Lora', Georgia, serif;
+          --sans:      'Outfit', sans-serif;
         }
 
-        /* Top bar */
+        .vc-root {
+          height: 100vh;
+          background: var(--bg);
+          color: var(--text);
+          font-family: var(--sans);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        /* ── TOPBAR ── */
         .vc-topbar {
+          height: 52px;
+          min-height: 52px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 14px 24px;
-          background: rgba(10,10,20,0.95);
-          border-bottom: 1px solid #1e293b;
-          backdrop-filter: blur(12px);
+          padding: 0 24px;
+          background: var(--surface);
+          border-bottom: 1px solid var(--border);
           position: sticky;
           top: 0;
           z-index: 100;
+          gap: 16px;
         }
 
-        .vc-back-btn {
+        .vc-back {
           display: flex;
           align-items: center;
-          gap: 8px;
-          background: #1e293b;
-          border: 1px solid #334155;
-          color: #94a3b8;
-          padding: 8px 16px;
-          border-radius: 8px;
-          cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 14px;
+          gap: 6px;
+          background: none;
+          border: 1px solid var(--border2);
+          color: var(--text2);
+          padding: 6px 14px;
+          border-radius: 6px;
+          font-family: var(--sans);
+          font-size: 12px;
           font-weight: 500;
-          transition: all 0.2s;
+          letter-spacing: 0.03em;
+          cursor: pointer;
+          transition: all 0.15s;
+          white-space: nowrap;
         }
-        .vc-back-btn:hover { background: #293548; color: #e2e8f0; transform: translateX(-2px); }
+        .vc-back:hover { border-color: var(--amber); color: var(--amber); }
 
-        .vc-course-title {
-          font-family: 'Syne', sans-serif;
+        .vc-course-name {
+          font-family: var(--serif);
+          font-style: italic;
           font-size: 15px;
-          font-weight: 700;
-          color: #f1f5f9;
-          max-width: 400px;
+          color: var(--text);
+          flex: 1;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          opacity: 0.8;
+          text-align: center;
         }
 
-        .vc-progress-pill {
+        .vc-progress-row {
           display: flex;
           align-items: center;
           gap: 10px;
-          background: #0f172a;
-          border: 1px solid #1e293b;
-          padding: 6px 14px;
+          flex-shrink: 0;
+        }
+        .vc-progress-count {
+          font-family: var(--sans);
+          font-size: 11px;
+          color: var(--muted);
+          font-weight: 500;
+        }
+        .vc-progress-track {
+          width: 88px;
+          height: 3px;
+          background: var(--border2);
           border-radius: 99px;
-          font-size: 12px;
-          color: #64748b;
+          overflow: hidden;
         }
-        .vc-progress-bar-wrap {
-          width: 80px; height: 4px; background: #1e293b; border-radius: 99px; overflow: hidden;
-        }
-        .vc-progress-bar-fill {
+        .vc-progress-fill {
           height: 100%;
-          background: linear-gradient(90deg, #6366f1, #8b5cf6);
+          background: var(--amber);
           border-radius: 99px;
-          transition: width 0.4s ease;
+          transition: width 0.5s ease;
+        }
+        .vc-progress-pct {
+          font-family: var(--sans);
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--amber);
+          min-width: 30px;
+          text-align: right;
         }
 
-        /* Body layout */
+        /* ── BODY ── */
         .vc-body {
           display: flex;
           flex: 1;
           overflow: hidden;
-          min-height: calc(100vh - 57px);
+          height: calc(100vh - 52px);
         }
 
-        /* Main area */
+        /* ── MAIN ── */
         .vc-main {
           flex: 1;
           overflow-y: auto;
-          padding: 28px;
           display: flex;
           flex-direction: column;
-          gap: 24px;
         }
+        .vc-main::-webkit-scrollbar { width: 4px; }
+        .vc-main::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
 
-        /* Video card */
-        .vc-video-card {
-          background: #0d1117;
-          border: 1px solid #1e293b;
-          border-radius: 16px;
-          overflow: hidden;
-        }
-
-        .vc-video-wrapper {
-          position: relative;
-          width: 100%;
+        /* VIDEO */
+        .vc-video-wrap {
           background: #000;
+          width: 100%;
+          flex-shrink: 0;
+        }
+        .vc-video-placeholder {
+          width: 100%;
+          height: 440px;
+          background: #080810;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
-        .vc-video-meta {
-          padding: 20px 24px;
-          border-top: 1px solid #1e293b;
+        /* LESSON META */
+        .vc-meta {
+          padding: 18px 24px;
+          background: var(--surface);
+          border-bottom: 1px solid var(--border);
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 20px;
+          flex-wrap: wrap;
+          flex-shrink: 0;
+        }
+        .vc-meta-left { flex: 1; min-width: 0; }
+        .vc-lesson-eyebrow {
+          font-family: var(--sans);
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--muted);
+          margin-bottom: 5px;
+        }
+        .vc-lesson-title {
+          font-family: var(--serif);
+          font-size: 22px;
+          font-weight: 600;
+          color: var(--text);
+          line-height: 1.25;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .vc-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .vc-tag {
+          font-family: var(--sans);
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          padding: 3px 9px;
+          border-radius: 3px;
+        }
+        .vc-tag-free    { background: rgba(109,184,138,0.12); color: var(--green);  border: 1px solid rgba(109,184,138,0.2); }
+        .vc-tag-enrolled { background: rgba(232,168,124,0.10); color: var(--amber); border: 1px solid rgba(232,168,124,0.2); }
+        .vc-tag-meta    { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+        .vc-controls {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-shrink: 0;
+          flex-wrap: wrap;
+        }
+        .vc-btn {
+          padding: 7px 16px;
+          border-radius: 6px;
+          font-family: var(--sans);
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.03em;
+          cursor: pointer;
+          transition: all 0.15s;
+          border: 1px solid transparent;
+          white-space: nowrap;
+        }
+        .vc-btn-outline {
+          background: none;
+          border-color: var(--border2);
+          color: var(--text2);
+        }
+        .vc-btn-outline:hover:not(:disabled) { border-color: var(--text2); color: var(--text); }
+        .vc-btn-outline:disabled { opacity: 0.28; cursor: not-allowed; }
+        .vc-btn-solid {
+          background: var(--amber);
+          color: #1a0e06;
+          border-color: var(--amber);
+        }
+        .vc-btn-solid:hover:not(:disabled) { background: var(--amber2); border-color: var(--amber2); }
+        .vc-btn-solid:disabled { opacity: 0.28; cursor: not-allowed; }
+        .vc-btn-done {
+          background: rgba(109,184,138,0.12);
+          color: var(--green);
+          border-color: rgba(109,184,138,0.25);
+          cursor: default;
+        }
+
+        /* DESCRIPTION */
+        .vc-desc {
+          padding: 20px 24px 24px;
+          font-family: var(--serif);
+          font-size: 15px;
+          line-height: 1.85;
+          color: var(--text2);
+          border-bottom: 1px solid var(--border);
+          background: var(--bg);
+          flex-shrink: 0;
+        }
+        .vc-desc p { margin-bottom: 0.5em; }
+
+        /* TABS */
+        .vc-tabs {
+          display: flex;
+          background: var(--surface);
+          border-bottom: 1px solid var(--border);
+          padding: 0 24px;
+          flex-shrink: 0;
+        }
+        .vc-tab {
+          padding: 13px 20px;
+          font-family: var(--sans);
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--muted);
+          background: none;
+          border: none;
+          border-bottom: 2px solid transparent;
+          cursor: pointer;
+          transition: all 0.15s;
+          display: flex;
+          align-items: center;
+          gap: 7px;
+        }
+        .vc-tab:hover { color: var(--text2); }
+        .vc-tab-active { color: var(--amber); border-bottom-color: var(--amber); }
+        .vc-tab-badge {
+          background: var(--amber);
+          color: #1a0e06;
+          font-size: 9px;
+          font-weight: 800;
+          padding: 1px 6px;
+          border-radius: 99px;
+        }
+
+        /* TAB BODY */
+        .vc-tab-body { padding: 28px 24px; background: var(--bg); }
+
+        /* ASSIGNMENTS */
+        .vc-assign-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 14px;
+        }
+        .vc-assign-card {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
           gap: 16px;
-          flex-wrap: wrap;
+          padding: 18px 20px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.15s;
         }
-
-        .vc-video-meta-left h2 {
-          font-family: 'Syne', sans-serif;
-          font-size: 20px;
+        .vc-assign-card:hover { border-color: var(--amber); transform: translateX(4px); }
+        .vc-assign-label {
+          font-family: var(--sans);
+          font-size: 9px;
           font-weight: 700;
-          color: #f1f5f9;
-          margin-bottom: 6px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--amber);
+          margin-bottom: 4px;
+        }
+        .vc-assign-title {
+          font-family: var(--serif);
+          font-size: 17px;
+          color: var(--text);
+          line-height: 1.3;
+        }
+        .vc-assign-meta { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
+        .vc-assign-meta span { font-size: 12px; color: var(--muted); }
+        .vc-assign-arrow { font-size: 16px; color: var(--border2); align-self: center; flex-shrink: 0; }
+
+        /* CHAT */
+        .vc-chat-wrap {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          overflow: hidden;
+          min-height: 400px;
         }
 
-        .vc-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          padding: 3px 10px;
-          border-radius: 99px;
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.04em;
-        }
-        .vc-badge-free { background: #052e16; color: #4ade80; border: 1px solid #166534; }
-        .vc-badge-paid { background: #1e1b4b; color: #818cf8; border: 1px solid #3730a3; }
-        .vc-badge-lesson { background: #0f172a; color: #64748b; border: 1px solid #1e293b; }
-
-        .vc-nav-btns {
-          display: flex;
-          gap: 8px;
-        }
-        .vc-nav-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 16px;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          border: none;
-          font-family: 'DM Sans', sans-serif;
-          transition: all 0.2s;
-        }
-        .vc-nav-btn-prev { background: #1e293b; color: #94a3b8; }
-        .vc-nav-btn-prev:hover { background: #293548; color: #e2e8f0; }
-        .vc-nav-btn-next { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
-        .vc-nav-btn-next:hover { opacity: 0.9; transform: translateX(2px); }
-        .vc-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
-
-        .vc-complete-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 16px;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          border: none;
-          font-family: 'DM Sans', sans-serif;
-          transition: all 0.2s;
-        }
-        .vc-complete-btn-done { background: #052e16; color: #4ade80; border: 1px solid #166534; cursor: default; }
-        .vc-complete-btn-mark { background: #0f172a; color: #64748b; border: 1px solid #1e293b; }
-        .vc-complete-btn-mark:hover { border-color: #4ade80; color: #4ade80; background: #052e16; }
-
-        .vc-description {
-          padding: 0 24px 20px;
-          color: #64748b;
-          font-size: 14px;
-          line-height: 1.7;
-        }
-
-        /* Tabs */
-        .vc-tabs {
-          display: flex;
-          gap: 4px;
-          background: #0d1117;
-          border: 1px solid #1e293b;
-          border-radius: 12px;
-          padding: 4px;
-        }
-        .vc-tab {
-          flex: 1;
-          padding: 9px;
-          border-radius: 8px;
-          border: none;
-          background: transparent;
-          color: #64748b;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-        }
-        .vc-tab-active { background: #1e293b; color: #f1f5f9; }
-
-        /* Assignments */
-        .vc-assignment-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-          gap: 16px;
-        }
-        .vc-assignment-card {
-          background: #0d1117;
-          border: 1px solid #1e293b;
-          border-radius: 12px;
-          padding: 18px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .vc-assignment-card:hover { border-color: #6366f1; transform: translateY(-2px); }
-        .vc-assignment-card h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
-        .vc-assignment-card p { font-size: 13px; color: #64748b; line-height: 1.5; }
-        .vc-assignment-meta { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
-        .vc-assignment-meta span { font-size: 12px; color: #475569; }
-        .vc-assignment-link { margin-top: 12px; font-size: 12px; color: #6366f1; font-weight: 600; display: flex; align-items: center; gap: 4px; }
-
-        /* Chat wrapper */
-        .vc-chat-wrapper { background: #0d1117; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; }
-
-        /* Sidebar */
+        /* ── SIDEBAR ── */
         .vc-sidebar {
-          width: 340px;
-          min-width: 340px;
-          background: #09090f;
-          border-left: 1px solid #1e293b;
+          width: 320px;
+          min-width: 320px;
+          background: var(--surface);
+          border-left: 1px solid var(--border);
           display: flex;
           flex-direction: column;
           overflow: hidden;
         }
-
-        .vc-sidebar-header {
-          padding: 20px;
-          border-bottom: 1px solid #1e293b;
-          background: #0a0a15;
+        .vc-sidebar-hdr {
+          padding: 16px 20px;
+          border-bottom: 1px solid var(--border);
+          background: var(--surface2);
+          flex-shrink: 0;
         }
-        .vc-sidebar-header h2 {
-          font-family: 'Syne', sans-serif;
-          font-size: 14px;
-          font-weight: 800;
-          letter-spacing: 0.08em;
+        .vc-sidebar-eyebrow {
+          font-family: var(--sans);
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: #94a3b8;
-          margin-bottom: 4px;
+          color: var(--muted);
+          margin-bottom: 3px;
         }
-        .vc-sidebar-meta { font-size: 12px; color: #334155; }
-
-        .vc-sidebar-scroll { flex: 1; overflow-y: auto; padding: 12px; }
-        .vc-sidebar-scroll::-webkit-scrollbar { width: 4px; }
-        .vc-sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
-        .vc-sidebar-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 99px; }
-
-        /* Chapter */
-        .vc-chapter { border: 1px solid #1a2234; border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
-        .vc-chapter-hdr {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 11px 14px;
-          background: #0f1729;
-          border: none;
-          cursor: pointer;
-          transition: background 0.15s;
-          text-align: left;
-          gap: 10px;
-        }
-        .vc-chapter-hdr:hover { background: #131e35; }
-        .vc-chapter-num {
-          width: 22px; height: 22px; min-width: 22px;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          border-radius: 6px;
-          display: flex; align-items: center; justify-content: center;
-          font-family: 'Syne', sans-serif;
-          font-size: 11px; font-weight: 800; color: white;
-        }
-        .vc-chapter-title {
-          flex: 1;
-          font-size: 13px;
-          font-weight: 600;
-          color: #cbd5e1;
-          font-family: 'DM Sans', sans-serif;
+        .vc-sidebar-course {
+          font-family: var(--serif);
+          font-size: 14px;
+          font-style: italic;
+          color: var(--text);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .vc-chapter-count { font-size: 11px; color: #334155; white-space: nowrap; }
+        .vc-sidebar-stats {
+          font-family: var(--sans);
+          font-size: 11px;
+          color: var(--muted);
+          margin-top: 4px;
+        }
 
-        /* Lesson */
+        .vc-sidebar-scroll { flex: 1; overflow-y: auto; }
+        .vc-sidebar-scroll::-webkit-scrollbar { width: 3px; }
+        .vc-sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border); }
+
+        /* CHAPTER */
+        .vc-chapter { border-bottom: 1px solid var(--border); }
+        .vc-chapter-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 20px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          text-align: left;
+          transition: background 0.12s;
+        }
+        .vc-chapter-btn:hover { background: rgba(255,255,255,0.025); }
+        .vc-chapter-num {
+          font-family: var(--serif);
+          font-size: 20px;
+          font-weight: 400;
+          color: var(--border2);
+          line-height: 1;
+          min-width: 28px;
+        }
+        .vc-chapter-info { flex: 1; min-width: 0; }
+        .vc-chapter-name {
+          font-family: var(--sans);
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .vc-chapter-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+        .vc-chevron {
+          font-size: 9px;
+          color: var(--muted);
+          transition: transform 0.2s;
+          flex-shrink: 0;
+        }
+        .vc-chevron-open { transform: rotate(180deg); }
+
+        /* LESSON ROW */
         .vc-lesson {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 10px 14px;
+          gap: 11px;
+          padding: 9px 20px 9px 24px;
           cursor: pointer;
-          transition: background 0.15s;
           border-left: 3px solid transparent;
+          transition: all 0.12s;
+          background: var(--bg);
+          border-bottom: 1px solid rgba(255,255,255,0.025);
         }
-        .vc-lesson:hover { background: #0f172a; }
+        .vc-lesson:hover { background: rgba(255,255,255,0.025); }
         .vc-lesson-active {
-          background: #160f2e !important;
-          border-left-color: #6366f1;
+          background: rgba(232,168,124,0.07) !important;
+          border-left-color: var(--amber);
         }
         .vc-lesson-icon {
-          width: 28px; height: 28px; min-width: 28px;
+          width: 24px; height: 24px; min-width: 24px;
           border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
-          font-size: 10px;
-          transition: all 0.2s;
+          font-size: 9px;
+          font-weight: 700;
+          transition: all 0.15s;
         }
-        .vc-lesson-icon-active { background: #6366f1; color: white; }
-        .vc-lesson-icon-done { background: #052e16; color: #4ade80; }
-        .vc-lesson-icon-default { background: #1e293b; color: #475569; }
+        .vc-icon-active  { background: var(--amber); color: #1a0e06; }
+        .vc-icon-done    { background: rgba(109,184,138,0.15); color: var(--green); }
+        .vc-icon-default { background: var(--surface2); color: var(--muted); font-size: 10px; }
         .vc-lesson-info { flex: 1; min-width: 0; }
         .vc-lesson-name {
-          font-size: 13px;
-          font-weight: 500;
-          color: #94a3b8;
+          font-family: var(--sans);
+          font-size: 12.5px;
+          color: var(--text2);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
           line-height: 1.3;
-          font-family: 'DM Sans', sans-serif;
+          font-weight: 400;
         }
-        .vc-lesson-name-active { color: #e2e8f0; font-weight: 600; }
-        .vc-lesson-sub { display: flex; gap: 6px; margin-top: 3px; align-items: center; }
-        .vc-lesson-dur { font-size: 11px; color: #334155; }
+        .vc-lesson-name-active { color: var(--text); font-weight: 600; }
+        .vc-lesson-dur { font-size: 10px; color: var(--muted); margin-top: 2px; }
+        .vc-free-pill {
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          background: rgba(109,184,138,0.12);
+          color: var(--green);
+          padding: 2px 6px;
+          border-radius: 3px;
+          flex-shrink: 0;
+        }
 
         @media (max-width: 1024px) {
-          .vc-body { flex-direction: column; }
-          .vc-sidebar { width: 100%; min-width: unset; border-left: none; border-top: 1px solid #1e293b; max-height: 420px; }
-          .vc-course-title { display: none; }
+          .vc-root { height: auto; overflow: visible; }
+          .vc-body { flex-direction: column; height: auto; overflow: visible; }
+          .vc-main { overflow: visible; }
+          .vc-sidebar { width: 100%; min-width: unset; max-height: 380px; border-left: none; border-top: 1px solid var(--border); }
+          .vc-course-name { display: none; }
         }
       `}</style>
 
       <div className="vc-root">
 
-        {/* ── Top bar ── */}
+        {/* ── TOPBAR ── */}
         <div className="vc-topbar">
-          <button className="vc-back-btn" onClick={() => navigate(-1)}>
-            ← Back
-          </button>
+          <button className="vc-back" onClick={() => navigate(-1)}>← Back</button>
 
-          {course && <div className="vc-course-title">{course.title}</div>}
+          {course && <div className="vc-course-name">{course.title}</div>}
 
-          <div className="vc-progress-pill">
-            <span>{completedLessons.size}/{totalLessons}</span>
-            <div className="vc-progress-bar-wrap">
-              <div className="vc-progress-bar-fill" style={{ width: `${progressPct}%` }} />
+          <div className="vc-progress-row">
+            <span className="vc-progress-count">{completedLessons.size}/{totalLessons}</span>
+            <div className="vc-progress-track">
+              <div className="vc-progress-fill" style={{ width: `${progressPct}%` }} />
             </div>
-            <span style={{ color: "#6366f1", fontWeight: 600 }}>{progressPct}%</span>
+            <span className="vc-progress-pct">{progressPct}%</span>
           </div>
         </div>
 
-        {/* ── Body ── */}
+        {/* ── BODY ── */}
         <div className="vc-body">
 
-          {/* ── Main column ── */}
+          {/* ── MAIN ── */}
           <div className="vc-main">
 
-            {/* Video card */}
-            <motion.div className="vc-video-card"
-              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-
-              <div className="vc-video-wrapper">
-                <AnimatePresence mode="wait">
-                  {currentVideo ? (
-                    <motion.div key={currentVideo._id}
-                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-                      {ytUrl ? (
-                        <iframe
-                          width="100%" height="480" src={ytUrl}
-                          title={currentVideo.title} frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen style={{ display: "block" }}
-                        />
-                      ) : isDirectVideo ? (
-                        <video src={currentVideo.videoUrl} controls autoPlay
-                          style={{ width: "100%", height: 480, background: "#000", display: "block" }} />
-                      ) : (
-                        <div style={{ height: 480, background: "#050510", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <p style={{ color: "#334155" }}>No video available</p>
-                        </div>
-                      )}
-                    </motion.div>
-                  ) : (
-                    <div style={{ height: 480, background: "#050510", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {course?.thumbnail
-                        ? <img src={course.thumbnail} alt="" style={{ maxHeight: 480, maxWidth: "100%", opacity: 0.5 }} />
-                        : <p style={{ color: "#334155" }}>Select a lesson to start</p>}
-                    </div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {currentVideo && (
-                <>
-                  <div className="vc-video-meta">
-                    <div className="vc-video-meta-left">
-                      <h2>{currentVideo.title}</h2>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <span className="vc-badge vc-badge-lesson">Lesson {currentLessonIndex} of {totalLessons}</span>
-                        <span className={`vc-badge ${currentVideo.isFree ? "vc-badge-free" : "vc-badge-paid"}`}>
-                          {currentVideo.isFree ? "✦ Free" : "✦ Enrolled"}
-                        </span>
+            {/* VIDEO */}
+            <div className="vc-video-wrap">
+              <AnimatePresence mode="wait">
+                {currentVideo ? (
+                  <motion.div key={currentVideo._id}
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25 }}>
+                    {ytUrl ? (
+                      <iframe
+                        width="100%" height="440" src={ytUrl}
+                        title={currentVideo.title} frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen style={{ display: "block" }}
+                      />
+                    ) : isDirectVideo ? (
+                      // ✅ FIX: key prop forces remount on lesson change
+                      <video
+                        key={currentVideo._id}
+                        src={currentVideo.videoUrl}
+                        controls autoPlay
+                        style={{ width: "100%", height: 440, background: "#000", display: "block" }}
+                      />
+                    ) : (
+                      <div className="vc-video-placeholder">
+                        <p style={{ color: "var(--muted)", fontFamily: "var(--serif)", fontStyle: "italic" }}>
+                          No video available
+                        </p>
                       </div>
-                    </div>
-                    <div className="vc-nav-btns">
-                      <button
-                        className="vc-complete-btn"
-                        style={{ ...(completedLessons.has(currentVideo._id) ? {} : {}) }}
-                        onClick={() => markComplete(currentVideo._id)}
-                        disabled={completedLessons.has(currentVideo._id)}
-                      >
-                        {completedLessons.has(currentVideo._id)
-                          ? <span className="vc-complete-btn vc-complete-btn-done">✓ Completed</span>
-                          : <span className="vc-complete-btn vc-complete-btn-mark">Mark Complete</span>}
-                      </button>
-                      <button className="vc-nav-btn vc-nav-btn-prev"
-                        disabled={!getPrevLesson()}
-                        onClick={() => { const p = getPrevLesson(); if (p) setCurrentVideo(p); }}>
-                        ← Prev
-                      </button>
-                      <button className="vc-nav-btn vc-nav-btn-next"
-                        disabled={!getNextLesson()}
-                        onClick={() => { const n = getNextLesson(); if (n) setCurrentVideo(n); }}>
-                        Next →
-                      </button>
-                    </div>
+                    )}
+                  </motion.div>
+                ) : (
+                  <div className="vc-video-placeholder">
+                    {course?.thumbnail ? (
+                      <img src={course.thumbnail} alt=""
+                        style={{ maxHeight: 440, maxWidth: "100%", opacity: 0.2, objectFit: "cover" }} />
+                    ) : (
+                      <p style={{ color: "var(--muted)", fontFamily: "var(--serif)", fontStyle: "italic", fontSize: 15 }}>
+                        Select a lesson to begin
+                      </p>
+                    )}
                   </div>
+                )}
+              </AnimatePresence>
+            </div>
 
-                  {currentVideo.description && (
-                    <div className="vc-description"
-                      dangerouslySetInnerHTML={{ __html: currentVideo.description }} />
+            {/* LESSON META */}
+            {currentVideo && (
+              <div className="vc-meta">
+                <div className="vc-meta-left">
+                  <div className="vc-lesson-eyebrow">
+                    Lesson {currentLessonIndex} of {totalLessons}
+                  </div>
+                  <div className="vc-lesson-title">{currentVideo.title}</div>
+                  <div className="vc-tags">
+                    <span className={`vc-tag ${currentVideo.isFree ? "vc-tag-free" : "vc-tag-enrolled"}`}>
+                      {currentVideo.isFree ? "Free" : "Enrolled"}
+                    </span>
+                    {currentVideo.duration > 0 && (
+                      <span className="vc-tag vc-tag-meta">
+                        {Math.floor(currentVideo.duration / 60)}:{String(currentVideo.duration % 60).padStart(2, "0")} min
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="vc-controls">
+                  {completedLessons.has(currentVideo._id) ? (
+                    <button className="vc-btn vc-btn-done">✓ Completed</button>
+                  ) : (
+                    <button className="vc-btn vc-btn-outline"
+                      onClick={() => markComplete(currentVideo._id)}>
+                      Mark Complete
+                    </button>
                   )}
-                </>
-              )}
-            </motion.div>
+                  <button className="vc-btn vc-btn-outline"
+                    disabled={!getPrevLesson()}
+                    onClick={() => { const p = getPrevLesson(); if (p) setCurrentVideo(p); }}>
+                    ← Prev
+                  </button>
+                  <button className="vc-btn vc-btn-solid"
+                    disabled={!getNextLesson()}
+                    onClick={() => { const n = getNextLesson(); if (n) setCurrentVideo(n); }}>
+                    Next →
+                  </button>
+                </div>
+              </div>
+            )}
 
-            {/* Tabs */}
+            {/* DESCRIPTION */}
+            {currentVideo?.description && (
+              <div className="vc-desc"
+                dangerouslySetInnerHTML={{ __html: currentVideo.description }} />
+            )}
+
+            {/* TABS */}
             <div className="vc-tabs">
-              <button className={`vc-tab ${activeTab === "playlist" ? "vc-tab-active" : ""}`}
-                onClick={() => setActiveTab("playlist")}>
-                📚 Curriculum
-              </button>
-              {assignments.length > 0 && (
-                <button className={`vc-tab ${activeTab === "assignments" ? "vc-tab-active" : ""}`}
-                  onClick={() => setActiveTab("assignments")}>
-                  📝 Assignments <span style={{ background: "#6366f1", color: "white", borderRadius: 99, padding: "1px 7px", fontSize: 11 }}>{assignments.length}</span>
-                </button>
-              )}
-              <button className={`vc-tab ${activeTab === "chat" ? "vc-tab-active" : ""}`}
+              <button
+                className={`vc-tab ${activeTab === "chat" ? "vc-tab-active" : ""}`}
                 onClick={() => setActiveTab("chat")}>
                 💬 Discussion
               </button>
+              {assignments.length > 0 && (
+                <button
+                  className={`vc-tab ${activeTab === "assignments" ? "vc-tab-active" : ""}`}
+                  onClick={() => setActiveTab("assignments")}>
+                  📝 Assignments
+                  <span className="vc-tab-badge">{assignments.length}</span>
+                </button>
+              )}
             </div>
 
-            {/* Tab content */}
+            {/* TAB CONTENT */}
             <AnimatePresence mode="wait">
-              {activeTab === "assignments" && (
-                <motion.div key="assignments"
-                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                  <div className="vc-assignment-grid">
-                    {assignments.map((a, idx) => (
-                      <motion.div key={a._id} className="vc-assignment-card"
-                        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.06 }}
-                        onClick={() => navigate(`/assignment/byId`, {
-                          state: { assignmentUrl: a.attachments, assignmentTitle: a.assignmentNumber, assignmentDescription: a.description }
-                        })}>
-                        <h3>{a.assignmentNumber}</h3>
-                        <p>{a.description}</p>
-                        <div className="vc-assignment-meta">
-                          <span>📅 Due: {new Date(a.dueDate).toLocaleDateString()}</span>
-                          <span>⭐ {a.totalPoints} pts</span>
-                        </div>
-                        <div className="vc-assignment-link">View Assignment →</div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
               {activeTab === "chat" && (
-                <motion.div key="chat"
-                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                  <div className="vc-chat-wrapper">
+                <motion.div key="chat" className="vc-tab-body"
+                  initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                  <div className="vc-chat-wrap">
                     <GroupChat courseId={courseId} />
                   </div>
                 </motion.div>
               )}
 
-              {activeTab === "playlist" && (
-                <motion.div key="playlist-mobile"
-                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  style={{ display: "none" }} className="vc-mobile-playlist">
-                  {/* Mobile: curriculum shown in main area */}
+              {activeTab === "assignments" && (
+                <motion.div key="assignments" className="vc-tab-body"
+                  initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                  <div className="vc-assign-grid">
+                    {assignments.map((a, idx) => (
+                      <motion.div
+                        key={a._id}
+                        className="vc-assign-card"
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        onClick={() => navigate("/assignment/byId", {
+                          state: {
+                            assignmentUrl: a.attachments,
+                            assignmentTitle: a.assignmentNumber,
+                            assignmentDescription: a.description,
+                          }
+                        })}>
+                        <div>
+                          <div className="vc-assign-label">{a.assignmentNumber}</div>
+                          <div className="vc-assign-title">{a.description}</div>
+                          <div className="vc-assign-meta">
+                            <span>📅 Due: {new Date(a.dueDate).toLocaleDateString()}</span>
+                            <span>⭐ {a.totalPoints} pts</span>
+                          </div>
+                        </div>
+                        <div className="vc-assign-arrow">→</div>
+                      </motion.div>
+                    ))}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
           </div>
 
-          {/* ── Sidebar ── */}
+          {/* ── SIDEBAR ── */}
           <div className="vc-sidebar">
-            <div className="vc-sidebar-header">
-              <h2>Course Content</h2>
-              <div className="vc-sidebar-meta">
-                {curriculum.length} chapters · {totalLessons} lessons
+            <div className="vc-sidebar-hdr">
+              <div className="vc-sidebar-eyebrow">Course Content</div>
+              <div className="vc-sidebar-course">{course?.title}</div>
+              <div className="vc-sidebar-stats">
+                {curriculum.length} chapters · {totalLessons} lessons ·{" "}
+                <span style={{ color: "var(--amber)" }}>{completedLessons.size} done</span>
               </div>
             </div>
 
             <div className="vc-sidebar-scroll">
-              {curriculum.length > 0 ? curriculum.map((chapter, chIdx) => (
+              {curriculum.length > 0 ? curriculum.map((chapter, ci) => (
                 <div key={chapter._id} className="vc-chapter">
-                  <button className="vc-chapter-hdr" onClick={() => toggleChapter(chapter._id)}>
-                    <div className="vc-chapter-num">{chIdx + 1}</div>
-                    <span className="vc-chapter-title">{chapter.title}</span>
-                    <span className="vc-chapter-count">{chapter.lessons?.length || 0} lessons</span>
-                    <span style={{ color: "#334155", fontSize: 10 }}>{expandedChapters[chapter._id] ? "▲" : "▼"}</span>
+                  <button className="vc-chapter-btn" onClick={() => toggleChapter(chapter._id)}>
+                    <span className="vc-chapter-num">{String(ci + 1).padStart(2, "0")}</span>
+                    <div className="vc-chapter-info">
+                      <div className="vc-chapter-name">{chapter.title}</div>
+                      <div className="vc-chapter-sub">{chapter.lessons?.length || 0} lessons</div>
+                    </div>
+                    <span className={`vc-chevron ${expandedChapters[chapter._id] ? "vc-chevron-open" : ""}`}>▼</span>
                   </button>
 
                   <AnimatePresence>
@@ -680,31 +828,30 @@ const VideoCourse = () => {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.18 }}
                         style={{ overflow: "hidden" }}>
-                        {(chapter.lessons || []).map((lesson) => {
+                        {(chapter.lessons || []).map((lesson, li) => {
                           const isActive = currentVideo?._id === lesson._id;
                           const isDone = completedLessons.has(lesson._id);
                           return (
-                            <div key={lesson._id}
+                            <div
+                              key={lesson._id}
                               className={`vc-lesson ${isActive ? "vc-lesson-active" : ""}`}
-                              onClick={() => handleLessonClick(lesson)}>
-                              <div className={`vc-lesson-icon ${isActive ? "vc-lesson-icon-active" : isDone ? "vc-lesson-icon-done" : "vc-lesson-icon-default"}`}>
-                                {isActive ? "▶" : isDone ? "✓" : "○"}
+                              onClick={() => setCurrentVideo(lesson)}>
+                              <div className={`vc-lesson-icon ${isActive ? "vc-icon-active" : isDone ? "vc-icon-done" : "vc-icon-default"}`}>
+                                {isActive ? "▶" : isDone ? "✓" : li + 1}
                               </div>
                               <div className="vc-lesson-info">
-                                <div className={`vc-lesson-name ${isActive ? "vc-lesson-name-active" : ""}`}>{lesson.title}</div>
-                                <div className="vc-lesson-sub">
-                                  {lesson.duration > 0 && (
-                                    <span className="vc-lesson-dur">
-                                      {Math.floor(lesson.duration / 60)}:{String(lesson.duration % 60).padStart(2, "0")}
-                                    </span>
-                                  )}
-                                  {lesson.isFree && (
-                                    <span style={{ fontSize: 10, background: "#052e16", color: "#4ade80", padding: "1px 6px", borderRadius: 99, fontWeight: 600 }}>FREE</span>
-                                  )}
+                                <div className={`vc-lesson-name ${isActive ? "vc-lesson-name-active" : ""}`}>
+                                  {lesson.title}
                                 </div>
+                                {lesson.duration > 0 && (
+                                  <div className="vc-lesson-dur">
+                                    {Math.floor(lesson.duration / 60)}:{String(lesson.duration % 60).padStart(2, "0")}
+                                  </div>
+                                )}
                               </div>
+                              {lesson.isFree && <span className="vc-free-pill">Free</span>}
                             </div>
                           );
                         })}
@@ -713,7 +860,12 @@ const VideoCourse = () => {
                   </AnimatePresence>
                 </div>
               )) : (
-                <p style={{ textAlign: "center", color: "#334155", marginTop: 40, fontSize: 14 }}>No lessons available</p>
+                <p style={{
+                  textAlign: "center", color: "var(--muted)", marginTop: 48,
+                  fontSize: 14, fontFamily: "var(--serif)", fontStyle: "italic"
+                }}>
+                  No lessons available
+                </p>
               )}
             </div>
           </div>

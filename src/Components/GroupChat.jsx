@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
-
+import { useAuthStore } from "../store/useAuthStore";
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 const GroupChat = ({ courseId }) => {
@@ -10,8 +10,10 @@ const GroupChat = ({ courseId }) => {
   const [inputMessage, setInputMessage] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const messagesEndRef = useRef(null);
+  const { token } = useAuthStore();
+  
   const user = JSON.parse(localStorage.getItem("user"));
-
+ 
   useEffect(() => {
     const newSocket = io(backendUrl, { transports: ["websocket"], reconnection: true });
     newSocket.on("connect", () => {

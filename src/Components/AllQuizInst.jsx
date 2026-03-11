@@ -3,11 +3,11 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Timer, CheckCircle2, Star } from "lucide-react"; // nice icons
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../store/useAuthStore";
 const AllQuizInst = () => {
   const [quizzes, setQuizzes] = useState([]);
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
-  const token = localStorage.getItem("token");
-const navigate=useNavigate()
+ const navigate=useNavigate()
   useEffect(() => {
     const getAllQuizzes = async () => {
       try {
@@ -21,7 +21,7 @@ const navigate=useNavigate()
     };
     getAllQuizzes();
   }, []);
-
+const { token } = useAuthStore();
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {

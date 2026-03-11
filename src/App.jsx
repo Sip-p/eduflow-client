@@ -22,7 +22,7 @@ import Quizstats          from './pages/Quizstats.jsx'
 import OpenAssignmentpdf  from './pages/OpenAssignmentpdf.jsx'
 
 import ProtectedRoute     from './Components/ProtectedRoute.jsx'
-
+// import Lecture from './Components/lecture.jsx'
 // ✅ No Redux Provider — Zustand needs nothing here
 
 function App() {
@@ -54,6 +54,7 @@ function App() {
         <Route path="/course/:id" element={
           <ProtectedRoute>
             <VideoCourse />
+            {/* <Lecture/> */}
           </ProtectedRoute>
         } />
 

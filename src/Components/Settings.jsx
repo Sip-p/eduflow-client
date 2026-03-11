@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
+import { useAuthStore } from '../store/useAuthStore';
 const Settings = () => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
-  const user = JSON.parse(localStorage.getItem("user"));
-  const token = localStorage.getItem("token");
+  const { user, token, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
 
   const [name, setName] = useState(user?.name || "");
