@@ -34,7 +34,7 @@ const Login = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4  ">
       {error && (
         <div className="bg-red-100 text-red-600 text-sm rounded-lg p-3 border border-red-200">
           {error}

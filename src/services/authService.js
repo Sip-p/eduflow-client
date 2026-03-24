@@ -11,6 +11,10 @@ export const authService = {
       headers: { "Content-Type": "multipart/form-data" },
     }).then((r) => r.data),
 
+// ✅ /Verify token
+   verifyEmail:(token)=>
+    api.get(`/auth/verify-email/${token}`).then((r) => r.data),
+  
   // ✅ /reset-request
   requestReset: (email) =>
     api.post("/auth/reset-request", { email }).then((r) => r.data),

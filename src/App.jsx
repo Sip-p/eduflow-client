@@ -7,14 +7,14 @@ import Pricing            from './pages/Pricing.jsx'
 import Courses            from './pages/Courses.jsx'
 import ResetPassword      from './authPage/ResetPassword.jsx'
 import ResetrequestPage   from './authPage/ResetrequestPage.jsx'
-
+import VerifyEmail        from './authPage/VerifyEmail.jsx'
 import StudentDashBoard   from './pages/StudentDashBoard.jsx'
 import InstructorDashBoard from './pages/InstructorDashBoard.jsx'
 import StuCourses         from './Components/StuCourses.jsx'
 import VideoCourse        from './Components/VideoCourse.jsx'
 import Payment            from './Components/Payment.jsx'
 import Review             from './Components/Review.jsx'
-
+import Login from './authPage/Login.jsx'
 import Quizzes            from './pages/Quizzes.jsx'
 import AttemptQuiz        from './pages/AttemptQuiz.jsx'
 import QuizResult         from './pages/QuizResult.jsx'
@@ -33,10 +33,12 @@ function App() {
         {/* ── Public ───────────────────────────────────────────── */}
         <Route path="/"                        element={<LandingPage />} />
         <Route path="/home"                    element={<Home />} />
+        <Route path="/login"                   element={<Home />} />
         <Route path="/about"                   element={<About />} />
         <Route path="/reset-password/:token"   element={<ResetPassword />} />
         <Route path="/reset-request"           element={<ResetrequestPage />} />
         <Route path="/review"                  element={<Review />} />
+<Route path="/verify-email/:token" element={<VerifyEmail />} />
 
         {/* ── Student protected ─────────────────────────────────── */}
         <Route path="/student-dashboard" element={
