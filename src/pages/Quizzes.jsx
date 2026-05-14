@@ -1,119 +1,134 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaClock, FaClipboardList, FaAward, FaCheckCircle } from "react-icons/fa";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useAuthStore } from "../store/useAuthStore";
+import { QuizCard } from "../Components/QuizCard";
+import Navbar from "../Components/Navbar.jsx";
+
 const Quizzes = () => {
   const [quizzes, setQuizzes] = useState([]);
-  const [newQuizzes, setNewQuizzes] = useState([]);
+  const [activeTab, setActiveTab] = useState("new");
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [hasPrevPage, setHasPrevPage] = useState(false);
+
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
-  const token = localStorage.getItem("token");
-const navigate=useNavigate()
-  const getAllQuizzes = async () => {
+  const { token } = useAuthStore();
+
+  const getQuizzes = async () => {
     try {
-      const res = await axios.get(`${backendUrl}/api/quiz/allquizzes`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      console.log(res.data.notattemptedQuizzes);
-      setQuizzes(res.data.notattemptedQuizzes);
-      console.log(res.data.attemptedQuizzes)
-      setNewQuizzes(res.data.attemptedQuizzes);
+      const res = await axios.get(
+        `${backendUrl}/api/quiz/allquizzes?page=${page}&limit=6&type=${activeTab}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setQuizzes(res.data.data || []);
+      setTotalPages(res.data.totalPages || 1);
+      setHasNextPage(res.data.hasNextPage);
+      setHasPrevPage(res.data.hasPrevPage);
     } catch (error) {
       console.log("Error fetching quizzes:", error);
     }
   };
 
   useEffect(() => {
-    getAllQuizzes();
-  }, []);
+    if (token) getQuizzes();
+  }, [token, page, activeTab]);
 
- return (
-  <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 py-12 px-6">
-    <h1 className="text-4xl font-extrabold text-center text-green-800 mb-10 drop-shadow-sm">
-      📚 Available Quizzes
-    </h1>
+  return (
+    <>
+      <Navbar />
 
-    {quizzes.length > 0 || newQuizzes.length > 0 ? (
-      <div className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {[...quizzes.map(q => ({ ...q, attempted: false })), 
-          ...newQuizzes.map(a => ({
-            ...a.quizId, // Use the populated quiz object if your backend populates it
-            attempted: true
-          }))
-        ].map((quiz) => (
-          <div
-            key={quiz._id}
-            className={`rounded-2xl p-6 shadow-lg transition-all duration-300 border 
-              ${quiz.attempted 
-                ? "bg-gray-100 border-gray-300 cursor-not-allowed opacity-80" 
-                : "bg-white border-green-200 hover:shadow-2xl hover:scale-[1.02]"
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 py-12 px-6">
+
+        {/* TITLE */}
+        <h1 className="text-4xl font-extrabold text-center text-green-800 mb-8">
+          📚 Available Quizzes
+        </h1>
+
+        {/* 🔘 TOGGLE BUTTONS */}
+        <div className="flex justify-center gap-4 mb-10">
+          <button
+            onClick={() => {
+              setActiveTab("new");
+              setPage(1);
+            }}
+            className={`px-6 py-2 rounded-lg font-semibold transition ${activeTab === "new"
+                ? "bg-green-600 text-white"
+                : "bg-white text-green-700 border"
               }`}
           >
-            <h2 className="text-2xl font-bold text-green-700 mb-2">
-              {quiz.title.replace(/<[^>]*>?/gm, "").trim()}
-            </h2>
-            <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-              {quiz.description}
-            </p>
+            New Quizzes
+          </button>
 
-            <div className="space-y-2 text-gray-700 text-sm">
-              <p className="flex items-center gap-2">
-                <FaClipboardList className="text-green-500" /> 
-                <span>Course: {quiz.course?.title || "N/A"}</span>
-              </p>
-              <p className="flex items-center gap-2">
-                <FaClock className="text-green-500" /> 
-                <span>Duration: {quiz.duration} minutes</span>
-              </p>
-              <p className="flex items-center gap-2">
-                <FaAward className="text-yellow-500" /> 
-                <span>Total Points: {quiz.totalPoints}</span>
-              </p>
-              <p className="flex items-center gap-2">
-                <FaCheckCircle className="text-green-500" /> 
-                <span>
-                  Passing Score: {quiz.passingScore} | Published:{" "}
-                  {quiz.isPublished ? "✅" : "❌"}
-                </span>
-              </p>
+          <button
+            onClick={() => {
+              setActiveTab("attempted");
+              setPage(1);
+            }}
+            className={`px-6 py-2 rounded-lg font-semibold transition ${activeTab === "attempted"
+                ? "bg-green-600 text-white"
+                : "bg-white text-green-700 border"
+              }`}
+          >
+            Attempted
+          </button>
+        </div>
+
+        {/* 📦 QUIZ GRID */}
+        {quizzes.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+              {quizzes.map((quiz) => (
+                <QuizCard
+                  key={quiz._id}
+                  quiz={quiz}
+                  type={activeTab === "new" ? "new" : "attempted"}
+                />
+              ))}
+
             </div>
 
-            <div className="border-t border-gray-200 mt-4 pt-3 text-gray-600 text-xs">
-              <p>📅 Start: {new Date(quiz.startDate).toLocaleDateString()}</p>
-              <p>⏳ End: {new Date(quiz.endDate).toLocaleDateString()}</p>
-              <p>🔀 Shuffle: {quiz.shuffleOptions ? "Yes" : "No"}</p>
-              <p>📝 Questions: {quiz.questions?.length || 0}</p>
-            </div>
+            {/* 🔥 PAGINATION */}
+            <div className="flex justify-center items-center gap-4 mt-10">
 
-            <div className="mt-5 text-center">
-              {quiz.attempted ? (
-                <button
-                  className="bg-gray-500 text-white font-semibold py-2 px-6 rounded-full cursor-not-allowed"
-                  disabled
-                >
-                  Attempted
-                </button>
-              ) : (
-                <button
-                  className="bg-green-600 text-white font-semibold py-2 px-6 rounded-full hover:bg-green-700 transition"
-                  onClick={() => navigate("/attemptquiz", { state: { quiz } })}
-                >
-                  View Quiz
-                </button>
-              )}
+              <button
+                disabled={!hasPrevPage}
+                onClick={() => setPage((prev) => prev - 1)}
+                className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+              >
+                Prev
+              </button>
+
+              <span className="font-semibold">
+                Page {page} / {totalPages}
+              </span>
+
+              <button
+                disabled={!hasNextPage}
+                onClick={() => setPage((prev) => prev + 1)}
+                className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+
             </div>
-          </div>
-        ))}
+          </>
+        ) : (
+          <p className="text-center mt-6">
+            No quizzes available.
+          </p>
+        )}
+
       </div>
-    ) : (
-      <p className="text-center mt-20 text-lg text-gray-600">
-        No quizzes available. Please create one.
-      </p>
-    )}
-  </div>
-);
-
+    </>
+  );
 };
 
 export default Quizzes;

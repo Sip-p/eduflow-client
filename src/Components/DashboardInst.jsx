@@ -29,7 +29,7 @@ const DashboardInst = () => {
   });
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
-const { user, token, isAuthenticated } = useAuthStore();
+  const { user, token, isAuthenticated } = useAuthStore();
   const getalldashboarddata = async () => {
     try {
       const res = await axios.get(
@@ -46,7 +46,7 @@ const { user, token, isAuthenticated } = useAuthStore();
           totalCourses,
           totalStudents,
           totalRevenue,
-          totalAssignments,
+          totalAssignments, totalQuizzes
         } = res.data.data;
 
         setTargets({
@@ -54,10 +54,11 @@ const { user, token, isAuthenticated } = useAuthStore();
           totalStudents: totalStudents || 0,
           totalRevenue: totalRevenue || 0,
           totalAssignments: totalAssignments || 0,
+          totalQuizzes: totalQuizzes || 0,
         });
 
         // Static demo values (optional)
-        setQuizzes(6);
+        setQuizzes(totalQuizzes);
         setCompletion(85);
       }
     } catch (error) {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
-
+import { useAuthStore } from "../store/useAuthStore";
 const AttemptQuiz = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ const AttemptQuiz = () => {
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState(Array(quiz.questions.length).fill(""));
   const [isStarted, setIsStarted] = useState(false);
-
+  const { token } = useAuthStore()
   // Set initial timer safely
   const [timer, setTimer] = useState(() => {
     const duration = Number(quiz.duration);
@@ -38,7 +38,7 @@ const AttemptQuiz = () => {
   // Auto submit when timer reaches 0
   useEffect(() => {
     if (isStarted && timer === 0) {
-      alert("⏱ Time's up! Submitting your quiz...");
+      alert(" Time's up! Submitting your quiz...");
       handleSubmit();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -64,7 +64,7 @@ const AttemptQuiz = () => {
   const handleSubmit = async () => {
     try {
       setIsStarted(false); // stop timer
-      const token = localStorage.getItem("token");
+
       const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
       const res = await axios.post(

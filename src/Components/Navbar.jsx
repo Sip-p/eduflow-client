@@ -19,7 +19,7 @@ const Navbar = () => {
     markAllRead,
   } = useNotificationStore();
 
-  const [menuOpen,          setMenuOpen]          = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -70,13 +70,16 @@ const Navbar = () => {
 
   // ── Nav links ─────────────────────────────────────────────────────────────
   const navLinks = [
-    { label: "Home",      path: "/",                                                        always: true },
+    { label: "Home", path: "/", always: true },
     { label: "Dashboard", path: role === "teacher" ? "/instructor-dashboard" : "/student-dashboard", roles: ["teacher", "student"] },
-    { label: "Courses",   path: "/courses",   roles: ["student"] },
-    { label: "Quizzes",   path: "/quiz",      roles: ["student"] },
-    { label: "About",     path: "/about",     always: true },
-    { label: "Pricing",   path: "/pricing",   always: true },
-    { label: "Reviews",   path: "/review",    always: true },
+    { label: "Courses", path: "/courses", roles: ["student"] },
+    {
+      label: "Quizzes", path: "/quiz?page=1&limit=6&type=new",
+      roles: ["student"]
+    },
+    { label: "About", path: "/about", always: true },
+    { label: "Pricing", path: "/pricing", always: true },
+    { label: "Reviews", path: "/review", always: true },
   ].filter((l) => l.always || l.roles?.includes(role));
 
   const handleAuthClick = () => {
@@ -101,8 +104,8 @@ const Navbar = () => {
 
   const timeAgo = (date) => {
     const diff = Math.floor((Date.now() - new Date(date)) / 1000);
-    if (diff < 60)    return `${diff}s ago`;
-    if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
     return `${Math.floor(diff / 86400)}d ago`;
   };
@@ -460,11 +463,11 @@ const Navbar = () => {
 
                             {/* icon based on notification type */}
                             <div className="nb-notif-icon">
-                              {notif.type === "Course Published"    && "📚"}
-                              {notif.type === "Student Enrolled"    && "🎓"}
+                              {notif.type === "Course Published" && "📚"}
+                              {notif.type === "Student Enrolled" && "🎓"}
                               {notif.type === "Assignment Deadline" && "📝"}
-                              {notif.type === "New Announcement"    && "📢"}
-                              {notif.type === "Course Update"       && "🔄"}
+                              {notif.type === "New Announcement" && "📢"}
+                              {notif.type === "Course Update" && "🔄"}
                             </div>
 
                             <div className="nb-notif-body">

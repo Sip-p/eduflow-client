@@ -42,7 +42,8 @@ const MyQuizzes = () => {
       const res = await axios.get(`${backendUrl}/api/quiz/myattemptedquizzes`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setAttemptedQuizzes(res.data.attemptedQuizzes || []);
+      console.log(res.data)
+      setAttemptedQuizzes(res.data.myattemptedQuizzes || []);
     } catch (err) {
       console.error('Error fetching attempted quizzes:', err);
       setError('Failed to load your quizzes. Please try again.');
@@ -88,8 +89,8 @@ const MyQuizzes = () => {
       data: scores,
       backgroundColor: scores.map(s =>
         s >= 80 ? 'rgba(34, 197, 94, 0.75)' :
-        s >= 60 ? 'rgba(234, 179, 8, 0.75)' :
-        'rgba(239, 68, 68, 0.75)'
+          s >= 60 ? 'rgba(234, 179, 8, 0.75)' :
+            'rgba(239, 68, 68, 0.75)'
       ),
       borderRadius: 6,
       borderSkipped: false,
@@ -119,7 +120,7 @@ const MyQuizzes = () => {
         ticks: {
           color: '#6b7280',
           maxRotation: 30,
-          callback: function(val, i) {
+          callback: function (val, i) {
             const label = this.getLabelForValue(val);
             return label.length > 12 ? label.slice(0, 12) + '…' : label;
           }
@@ -174,8 +175,8 @@ const MyQuizzes = () => {
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
             { label: 'Total Attempts', value: totalAttempts, color: 'bg-indigo-50 text-indigo-700', icon: '📝' },
-            { label: 'Average Score', value: `${avgScore}%`, color: 'bg-amber-50 text-amber-700', icon: '📊' },
-            { label: 'Best Score', value: `${bestScore}%`, color: 'bg-green-50 text-green-700', icon: '🏆' },
+            { label: 'Average Score', value: `${avgScore}`, color: 'bg-amber-50 text-amber-700', icon: '📊' },
+            { label: 'Best Score', value: `${bestScore}`, color: 'bg-green-50 text-green-700', icon: '🏆' },
           ].map(stat => (
             <div key={stat.label} className={`rounded-xl p-4 ${stat.color} flex flex-col gap-1`}>
               <span className="text-xl">{stat.icon}</span>
@@ -198,15 +199,16 @@ const MyQuizzes = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {attemptedQuizzes.map((quiz) => {
+            {attemptedQuizzes.map((quiz, idx) => {
               const badge = getScoreBadge(quiz.score);
               return (
                 <div
-                  key={quiz._id}
+                  key={idx}
                   className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                 >
                   <div>
-                    <p className="font-semibold text-slate-800">{quiz.quizId?.title ?? 'Untitled Quiz'}</p>
+                    {console.log(quiz.id)}
+                    <p className="font-semibold text-slate-800">{quiz.id ? quiz.title : 'Untitled Quiz'}</p>
                     <p className="text-slate-400 text-xs mt-0.5">
                       {new Date(quiz.attemptedAt).toLocaleDateString('en-US', {
                         year: 'numeric', month: 'short', day: 'numeric'
@@ -214,10 +216,10 @@ const MyQuizzes = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${badge.cls}`}>
+                    {/* <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${badge.cls}`}>
                       {badge.label}
-                    </span>
-                    <span className="text-2xl font-bold text-slate-800">{quiz.score}%</span>
+                    </span> */}
+                    <span className="text-2xl font-bold text-slate-800">{quiz.score}</span>
                   </div>
                 </div>
               );

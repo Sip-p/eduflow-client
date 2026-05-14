@@ -1,10 +1,12 @@
-import React, { useState, useRef,useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 // import axios from "axios";
 import { useAuthStore } from "../store/useAuthStore";
 import { courseService } from "../services/courseService";
 import { uploadService } from "../services/uploadService";
+import { uploadVideoToCloudinary } from "../utils/upload";
+
 // ─── STEP INDICATOR ───────────────────────────────────────────────────────────
 const StepIndicator = ({ currentStep }) => {
   const steps = [
@@ -19,29 +21,26 @@ const StepIndicator = ({ currentStep }) => {
         <React.Fragment key={step.num}>
           <div className="flex flex-col items-center">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
-                currentStep > step.num
-                  ? "bg-emerald-500 text-white"
-                  : currentStep === step.num
+              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${currentStep > step.num
+                ? "bg-emerald-500 text-white"
+                : currentStep === step.num
                   ? "bg-indigo-600 text-white shadow-lg shadow-indigo-300"
                   : "bg-gray-100 text-gray-400"
-              }`}
+                }`}
             >
               {currentStep > step.num ? "✓" : step.num}
             </div>
             <span
-              className={`mt-1.5 text-xs font-medium ${
-                currentStep === step.num ? "text-indigo-600" : "text-gray-400"
-              }`}
+              className={`mt-1.5 text-xs font-medium ${currentStep === step.num ? "text-indigo-600" : "text-gray-400"
+                }`}
             >
               {step.label}
             </span>
           </div>
           {i < steps.length - 1 && (
             <div
-              className={`h-0.5 w-16 mx-2 mb-5 transition-all duration-500 ${
-                currentStep > step.num ? "bg-emerald-400" : "bg-gray-200"
-              }`}
+              className={`h-0.5 w-16 mx-2 mb-5 transition-all duration-500 ${currentStep > step.num ? "bg-emerald-400" : "bg-gray-200"
+                }`}
             />
           )}
         </React.Fragment>
@@ -76,27 +75,27 @@ const Step1CourseInfo = ({ data, onChange }) => {
   //     setUploadingThumb(false);
   //   }
   // };
-const handleThumbChange = async (e) => {
-  const file = e.target.files[0];
-  if (!file || !file.type.startsWith("image/")) return;
+  const handleThumbChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !file.type.startsWith("image/")) return;
 
-  setThumbPreview(URL.createObjectURL(file));
-  setUploadingThumb(true);
+    setThumbPreview(URL.createObjectURL(file));
+    setUploadingThumb(true);
 
-  try {
-    const url = await uploadService.uploadImage(file);
+    try {
+      const url = await uploadService.uploadImage(file);
 
-    onChange("thumbnail", url);
-    onChange("thumbnailPreview", URL.createObjectURL(file));
+      onChange("thumbnail", url);
+      onChange("thumbnailPreview", URL.createObjectURL(file));
 
-  } catch {
-    alert("Thumbnail upload failed");
-  } finally {
-    setUploadingThumb(false);
-  }
-};
+    } catch {
+      alert("Thumbnail upload failed");
+    } finally {
+      setUploadingThumb(false);
+    }
+  };
 
- 
+
   return (
     <div className="space-y-6">
       <div>
@@ -170,11 +169,10 @@ const handleThumbChange = async (e) => {
               key={lvl}
               type="button"
               onClick={() => onChange("level", lvl)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-medium capitalize transition-all ${
-                data.level === lvl
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
-                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-              }`}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-medium capitalize transition-all ${data.level === lvl
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
+                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                }`}
             >
               {lvl}
             </button>
@@ -341,11 +339,11 @@ const Step3Lessons = ({ chapters, setChapters }) => {
   const descRef = useRef("");
 
   const selectedChapter = chapters.find((c) => c.id === selectedChapterId);
-useEffect(() => {
-  if (chapters.length > 0 && !selectedChapterId) {
-    setSelectedChapterId(chapters[0].id);
-  }
-}, [chapters]);
+  useEffect(() => {
+    if (chapters.length > 0 && !selectedChapterId) {
+      setSelectedChapterId(chapters[0].id);
+    }
+  }, [chapters]);
   const handleVideoChange = (e) => {
     const file = e.target.files[0];
     if (!file || !file.type.startsWith("video/")) return alert("Select a video file");
@@ -400,8 +398,8 @@ useEffect(() => {
         id: Date.now(),
         title,
         description: desc,
- videoUrl: videoData.url,
- duration: Math.round(videoData.duration / 60),
+        videoUrl: videoData.url,
+        duration: videoData.duration,
         thumbnail: videoData.thumbnail,
         isFree,
         order: selectedChapter.lessons.length + 1,
@@ -453,11 +451,10 @@ useEffect(() => {
             <button
               key={ch.id}
               onClick={() => setSelectedChapterId(ch.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                selectedChapterId === ch.id
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedChapterId === ch.id
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
             >
               Ch {idx + 1}: {ch.title}
               {ch.lessons.length > 0 && (
@@ -591,8 +588,8 @@ useEffect(() => {
             {uploading ? (
               <>
                 <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
                 Uploading {uploadProgress}%...
               </>
@@ -612,9 +609,8 @@ useEffect(() => {
               <span className="text-sm text-gray-600">
                 Ch {idx + 1}: {ch.title}
               </span>
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                ch.lessons.length > 0 ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-              }`}>
+              <span className={`text-xs px-2 py-1 rounded-full font-medium ${ch.lessons.length > 0 ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                }`}>
                 {ch.lessons.length > 0 ? `${ch.lessons.length} lesson${ch.lessons.length !== 1 ? "s" : ""}` : "No lessons yet"}
               </span>
             </div>
@@ -733,6 +729,7 @@ const Step4Review = ({ courseData, chapters, onPublish, loading }) => {
 const CourseCreation = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [videoUrl, setVideoUrl] = useState("")
 
   // Step 1 data
   const [courseData, setCourseData] = useState({
@@ -767,7 +764,7 @@ const CourseCreation = () => {
   const handlePublish = async (publish) => {
     setLoading(publish ? "publish" : "draft");
     try {
-       // Build payload matching your Chapter + Lesson model
+      // Build payload matching your Chapter + Lesson model
       const payload = {
         title: courseData.title.trim(),
         description: courseData.description.trim(),
@@ -799,7 +796,7 @@ const CourseCreation = () => {
       //   },
       // });
       console.log("COURSE PAYLOAD:", payload);
-const res=await courseService.create(payload)
+      const res = await courseService.create(payload)
       alert(publish ? "Course published successfully! 🎉" : "Course saved as draft!");
 
       // Reset everything
